@@ -3,10 +3,16 @@
 /**
  * Module dependencies.
  */
-
 var app = require('../app');
 var debug = require('debug')('sstv:server');
+
 var http = require('http');
+const cors = require("cors");
+const {Server} = require("socket.io");
+const socketHandler = require('../sokets/socketHandler');
+const socketEventHandler = require('../sokets/socketHandler');
+
+
 
 /**
  * Get port from environment and store in Express.
@@ -17,9 +23,21 @@ app.set('port', port);
 
 /**
  * Create HTTP server.
+ * Scocket 서버생성
  */
 
 var server = http.createServer(app);
+
+io = new Server(server, {
+  cors: {
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST"],
+  },
+});
+
+//Scoket Server Events 처리담당
+socketEventHandler(io);
+
 
 /**
  * Listen on provided port, on all network interfaces.
@@ -88,3 +106,5 @@ function onListening() {
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
 }
+
+module.exports = {io};
