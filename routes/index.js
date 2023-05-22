@@ -6,29 +6,30 @@ var Data = require('../model/Data');
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
+  console.log(req.cookies.NSESSIONID);
   res.json("[Start Node Server]")
 });
 
 /* 
 나중에 Spring의 User 만들어지면 model에 user 만들어서 user 담기 + 로그아웃도 구현
 */
-router.post('/addCookie', (req, res, next) => {
-  const {userId, password} = req.body.data;
+// router.post('/addCookie', (req, res, next) => {
+//   // const {userId, password} = req.body.data;
+//   console.log('req.body.data = ', req.body.data);
   
-  console.log('userId', userId);
-  console.log('password', password);
+  
 
-  const sessionId = v4();
+//   const sessionId = v4();
   
-  try {
-    Redis.client.set(sessionId, userId);  
-  } catch (error) {
-    console.log('[index.js /addCookie] error = ', error);
-    return error;
-  }
+//   // try {
+//   //   Redis.client.set(sessionId, userId);  
+//   // } catch (error) {
+//   //   console.log('[index.js /addCookie] error = ', error);
+//   //   return error;
+//   // }
   
-  res.json(sessionId);
-});
+//   res.json(sessionId);
+// });
 
 router.post('/removeCookie', (req, res, next) => {
   console.log('[index.js /removeCookie] req.body.data = ', req.body.data);
@@ -46,26 +47,22 @@ router.post('/removeCookie', (req, res, next) => {
 });
 
 //테스트를 위해 임시로 로그인 시키기
-router.get('/login', (req, res) => {
+router.post('/addCookie', async (req, res) => {
+  const user = req.body.data;
   
   try {
-    const sessionId = req.cookies['NSESSIONID'];
-    let data;
-
+    const sessionId = req.cookies.NSESSIONID;
     if(sessionId == null || sessionId == undefined) {
       const sessionId = v4();
 
-      res.cookie('NSESSIONID', sessionId, {
-        path : '/',
-        httpOnly : true
-      });
-
-      Redis.client.set(sessionId + '_user', 'testUser');
-      res.json(JSON.stringify(data));
+      //임시 유저
+      console.log('sessionId = ', sessionId);
+      await Redis.client.set(sessionId + '_user', JSON.stringify(user));
+      res.json(sessionId);
+      return;
     }
 
-    Redis.client.set(sessionId, '');
-    res.json(JSON.stringify(data));
+    res.json(sessionId);
   } catch(error) {
     console.log('[index.js /login] error = ', error);
     res.status(500).json({ error: 'Server Internal Error' });
