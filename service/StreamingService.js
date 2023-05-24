@@ -1,11 +1,10 @@
 const e = require('cors');
-const StreamingDAO = require('../DAO/StreamingDAO');
+const streamingRestDAO = require('../DAO/StreamingRestDAO');
 const Redis = require('../model/Redis');
-const dateUtils = require('date-utils');
-const { json } = require('express');
+const streamingDAO = new (require('../DAO/StreamingDAO'))();
 
 class StreamingService {
-  streamingDAO = new StreamingDAO();
+  streamingRestDAO = new streamingRestDAO();
 
   /* 
   1. 회원인지 체크
@@ -38,12 +37,11 @@ class StreamingService {
 
   async addStreaming(streamingTitle, isRecord, category , sessionId) {
     try {
-      const channelIdWithAd = await this.streamingDAO.createChannel(streamingTitle, isRecord);
-      const streamingWithAd = await this.streamingDAO.getChannelInfo(channelIdWithAd);
+      const channelIdWithAd = await this.streamingRestDAO.createChannel(streamingTitle, isRecord);
+      const streamingWithAd = await this.streamingRestDAO.getChannelInfo(channelIdWithAd);
 
-      const channelIdWithOutAd = await this.streamingDAO.createChannel(streamingTitle, isRecord);
-      const streamingWithOutAd = await this.streamingDAO.getChannelInfo(channelIdWithOutAd);
-
+      const channelIdWithOutAd = await this.streamingRestDAO.createChannel(streamingTitle, isRecord);
+      const streamingWithOutAd = await this.streamingRestDAO.getChannelInfo(channelIdWithOutAd);
 
       streamingWithAd.category = category;
       streamingWithOutAd.category = category;
@@ -60,30 +58,34 @@ class StreamingService {
 
   
   async getServiceUrlAndThumbnail(sessionId) {
-    const {channelIdWithAd, channelIdWithOutAd} = await this.getChannelIdBySessionId(sessionId);
+    try {
+      const {channelIdWithAd, channelIdWithOutAd} = await this.getChannelIdBySessionId(sessionId);
 
-    const serviceUrlWithAd = await this.streamingDAO.getServiceUrl(channelIdWithAd);
-    const thumnailUrlWithAd = await this.streamingDAO.getThumbnail(channelIdWithAd);
-
-    const serviceUrlWithOutAd = await this.streamingDAO.getServiceUrl(channelIdWithOutAd);
-    const thumnailUrlWithOutAd = await this.streamingDAO.getThumbnail(channelIdWithOutAd);
-
-    if(((serviceUrlWithAd != 'fail') && (thumnailUrlWithAd != 'fail') && (serviceUrlWithOutAd != 'fail') && (thumnailUrlWithOutAd != 'fail'))) {
-      const serviceUrlWithAd = sessionId + '_serviceUrlWithAd'
-      const thumbnailWithAd = sessionId + '_thumbnailUrl'
-
-      const serviceUrlWithOutAd = sessionId + '_serviceUrlWithAd'
-      const thumnailUrlWithOutAd = sessionId + '_thumbnailUrl'
-
-      await Redis.client.set(sessionId + '_serviceUrlWithAd', serviceUrlWithAd);
-      await Redis.client.set(sessionId + '_thumbnailUrlWithAd', thumbnailWithAd);
-
-      await Redis.client.set(sessionId + '_serviceUrlWithOutAd', serviceUrlWithOutAd);
-      await Redis.client.set(sessionId + '_thumbnailUrlWithOutAd', thumnailUrlWithOutAd);
-
-      return 'success';
+      const serviceUrlWithAd = await this.streamingRestDAO.getServiceUrl(channelIdWithAd);
+      const thumnailUrlWithAd = await this.streamingRestDAO.getThumbnail(channelIdWithAd);
+  
+      const serviceUrlWithOutAd = await this.streamingRestDAO.getServiceUrl(channelIdWithOutAd);
+      const thumnailUrlWithOutAd = await this.streamingRestDAO.getThumbnail(channelIdWithOutAd);
+  
+      if(((serviceUrlWithAd != 'fail') && (thumnailUrlWithAd != 'fail') && (serviceUrlWithOutAd != 'fail') && (thumnailUrlWithOutAd != 'fail'))) {
+        // const serviceUrlWithAd = sessionId + '_serviceUrlWithAd'
+        // const thumbnailWithAd = sessionId + '_thumbnailUrl'
+  
+        // const serviceUrlWithOutAd = sessionId + '_serviceUrlWithAd'
+        // const thumnailUrlWithOutAd = sessionId + '_thumbnailUrl'
+  
+        console.log('[StremaingService getServiceUrlAndThumbnail] typeof serviceUrlWithAd = ', typeof serviceUrlWithAd);
+        await Redis.client.set(sessionId + '_serviceUrlWithAd', serviceUrlWithAd);
+        await Redis.client.set(sessionId + '_thumbnailUrlWithAd', thumnailUrlWithAd);
+  
+        await Redis.client.set(sessionId + '_serviceUrlWithOutAd', serviceUrlWithOutAd);
+        await Redis.client.set(sessionId + '_thumbnailUrlWithOutAd', thumnailUrlWithOutAd);
+        return 'success';
+      }
+    } catch (error) {
+      console.log('[StremaingService getServiceUrlAndThumbnail] error = ', error);
+      return 'fail';
     }
-    return 'fail';
   }
 
   async getChannelIdBySessionId(sessionId) {
@@ -127,6 +129,10 @@ class StreamingService {
       Redis.client.del(sessionId + '_serviceUrlWithOutAd');
       Redis.client.del(sessionId + '_thumbnailUrlWithAd');
       Redis.client.del(sessionId + '_thumbnailUrlWithOutAd');
+
+      const pk = await streamingDAO.addStreaming(_onStreaming);
+      console.log('[StreamingService getStremaing] pk = ', pk);
+      _onStreaming.streamingPk = pk;
 
       await Redis.client.set(userId+ '_onStreaming', JSON.stringify(_onStreaming));
       return _onStreaming;
@@ -231,7 +237,7 @@ class StreamingService {
     
     await Redis.client.set(userId + '_onStreaming', JSON.stringify(streaming));
     
-    return await this.streamingDAO.sendStreamingToSpring(streaming);
+    return await this.streamingRestDAO.sendStreamingToSpring(streaming);
   }
 
   /* 
@@ -305,8 +311,8 @@ class StreamingService {
     const channelIdWithAd = JSON.parse((await Redis.client.get(userId + '_onStreaming'))).channelIdWithAd;
     const channelIdWithOutAd = JSON.parse((await Redis.client.get(userId + '_onStreaming'))).channelIdWithOutAd;
     
-    this.streamingDAO.removeStreaming(channelIdWithAd);
-    this.streamingDAO.removeStreaming(channelIdWithOutAd);
+    this.streamingRestDAO.removeStreaming(channelIdWithAd);
+    this.streamingRestDAO.removeStreaming(channelIdWithOutAd);
   }
 
   async removeCDN(sessionId) {
@@ -315,12 +321,25 @@ class StreamingService {
     const instanceNoWithAd = JSON.parse((await Redis.client.get(userId + '_onStreaming'))).instanceNoWithAd;
     const instanceNoWithOutAd = JSON.parse((await Redis.client.get(userId + '_onStreaming'))).instanceNoWithOutAd;
 
-    this.streamingDAO.removeCDN(instanceNoWithAd);
-    this.streamingDAO.removeCDN(instanceNoWithOutAd);
+    this.streamingRestDAO.removeCDN(instanceNoWithAd);
+    this.streamingRestDAO.removeCDN(instanceNoWithOutAd);
+  }
+
+  async getChannelWithAdList() {
+    const streamingList = await Redis.client.keys('*_onStreaming');
+    
+    let channelIdWithAdList = [];
+
+    for(const streaming of streamingList) {
+      const streamingObject = JSON.parse(await Redis.client.get(streaming));
+      channelIdWithAdList.push(streamingObject.channelIdWithAd);
+    }
+    
+    return channelIdWithAdList
   }
 
   createStreamingObject(user, streamingWithAd, streamingWithOutAd, serviceUrlWithAd, serviceUrlWithOutAd, thumnailUrlWithAd, thumnailUrlWithOutAd) {
-    const date = new Date();
+    // const date = new Date();
 
     const userId = JSON.parse(user).userId
     const streamingObjectWithAd = JSON.parse(streamingWithAd);
@@ -337,7 +356,7 @@ class StreamingService {
 
       'streamingCategory' : streamingObjectWithAd.category,
       'streamingTitle' : streamingObjectWithAd.content.channelName,
-      'streamingStartTime' : date.toFormat('YYYY-MM-DD/HH24:MI'),
+      'streamingStartTime' : Date.now(),
       'streamingEndTime' : '',
       'totalStreamingViewer' : 0,
       'streamingViewer' : 0,
