@@ -3,10 +3,10 @@ var router = express.Router();
 const StreamingService = require('../service/StreamingService');
 const streamingService = new StreamingService();
 var Data = require('../model/Data');
-const Redis = require('../model/Redis');
 
 
 /* 
+
   {result : success, data : 0} : 스트리밍 시작 가능
   {result : fail, data : 1} : 로그인 필요
   {result : fail, data : 2} : 이미 스트리밍중
