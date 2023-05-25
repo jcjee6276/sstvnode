@@ -3,14 +3,14 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const cors = require("cors");
+const bodyParser = require('body-parser');
 const adService = new (require('./service/AdService'))();
 
 //router 등록
 const indexRouter = require('./routes/index');
 const streamingRouter = require('./routes/StreamingRouter');
 const adRouter = require('./routes/AdRouter');
-
-//
+const donationRouter = require('./routes/DonationRouter');
 
 //api 요청에 사용할 key
 global.accessKey = 'z4Xcnb9Fi7MmuSeksVf4';
@@ -37,11 +37,12 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use('/', indexRouter);
 app.use('/streaming', streamingRouter);
 app.use('/ad', adRouter);
+app.use('/donation', donationRouter);
 
 
 // 에러 핸들러

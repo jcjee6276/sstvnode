@@ -35,12 +35,18 @@ class AdService {
   2 : 광고거절완료
   */
   async updateProcessCode(adReqNo, processCode, denyCode) {
-    adDAO.updateProcessCode(adReqNo, processCode, denyCode);
-
-    if(denyCode) {
-      const fileName = await adDAO.getAdName(adReqNo);
-      console.log('[AdService updateProcessCode] fileName = ', fileName);
-      adRestDAO.removeFileFromObjectStorage(fileName);
+    try {
+      const result = await adDAO.updateProcessCode(adReqNo, processCode, denyCode);
+      
+      if(denyCode) {
+        const fileName = await adDAO.getAdName(adReqNo);
+        console.log('[AdService updateProcessCode] fileName = ', fileName);
+        adRestDAO.removeFileFromObjectStorage(fileName);
+      }
+  
+      return result; 
+    } catch (error) {
+      console.log('[AdService updateProcessCode] error = ', error);
     }
   }
 
@@ -56,22 +62,29 @@ class AdService {
       const fileName = await adList[0].AD_NAME;
       const curtainId =  await adRestDAO.createLiveCurtain(fileName);
       
+      console.log('[AdService playAD] adList = ', adList);
+      console.log('[AdService playAD] fileName = ', fileName);
+      console.log('[AdService playAD] curtainId = ', curtainId);
+      
       let status;
       while(status != 'READY') {
         status = await new Promise((resolve) => {
           setTimeout(async () => {
-            const status = await adRestDAO.getCurtainStatus(curtainId);
+            status = await adRestDAO.getCurtainStatus(curtainId);
             resolve(status);    
           }, 5000);
         });
       }
       
       const keys = await Redis.client.keys('*_onStreaming');
+
       let adPlaysCount = adList[0].AD_PLAYS_COUNT;
       let adStreamingPlaysCount = adList[0].AD_STREAMING_PLAYS_COUNT;
       let adTotalViewers = adList[0].AD_TOTAL_VIEWERS;
       
       for(const key of keys) {
+        status = await adRestDAO.getCurtainStatus(curtainId);
+
         const stremaing = JSON.parse(await Redis.client.get(key));
         const channelId = stremaing.channelIdWithAd;
         const streamingViewer = stremaing.streamingViewer;
@@ -79,8 +92,14 @@ class AdService {
         adStreamingPlaysCount++;
         adTotalViewers += streamingViewer;
         
-        await adRestDAO.startLiveCurtain(channelId, curtainId);
+        console.log('[AdService playAd] channelId = ', channelId);
+        console.log('[AdService playAd] curtainId = ', curtainId);
+        console.log('[AdService playAd] status = ', status);
         console.log('[AdService startLiveCurtain()]');
+        adRestDAO.startLiveCurtain(channelId, curtainId);
+        // await this.delay(180000);
+
+        // console.log('[next Streaming]');
       }
       
       adPlaysCount++;
@@ -91,6 +110,10 @@ class AdService {
     } catch (error) {
       console.log('[AdService playAd] error = ', error);
     }
+  }
+  
+  async delay (ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
   
   //donation영역
@@ -170,7 +193,6 @@ class AdService {
       const userId = (JSON.parse(user)).userId;
       const userCoin = await userDAO.getUserCoin(userId);
 
-      console.log('[userCoint] = ', userCoin);
       if(userCoin >= 10000) {
         return true;
       }

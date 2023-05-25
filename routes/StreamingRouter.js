@@ -16,6 +16,7 @@ router.get('/addStreaming', async (req, res, next) => {
   try {
     const sessionId = req.cookies.NSESSIONID;
     const resultCode =  await streamingService.validateAddStreaming(sessionId);
+    console.log('[StreamingRouter /addStreaming] resultCode = ', resultCode);
     
     switch (resultCode) {
       case 0:
@@ -31,8 +32,8 @@ router.get('/addStreaming', async (req, res, next) => {
         break;
 
       case 3:
-      response = new Data('fail', 3);
-      break;
+        response = new Data('fail', 3);
+        break;
     }
 
     res.json(JSON.stringify(response));
