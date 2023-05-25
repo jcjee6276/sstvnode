@@ -108,7 +108,6 @@ class StreamingDAO {
       });
     })
     .then(result => {
-      console.log('[StreamingDAO getChannelInfo] result = ', result);
       return result;
     })
     .catch(error => {
@@ -221,29 +220,24 @@ class StreamingDAO {
       }
     }
 
-    return new Promise(async (resolve, rejcet) => {
+    return new Promise((resolve, rejcet) => {
       request(option, (error, response, body) => {
-        if(error) {
-          console.log('[StreamingDAO removeStreaming] error = ', error);
-          rejcet(error);
-        }
-        
         const bodyObject = JSON.parse(body);
         const errorCode = bodyObject.errorCode;
         
-        console.log('[StreamingDAO removeStreaming] bodyObject = ', bodyObject);
-        try {
-          if(errorCode) {
-            resolve('fail');
-            return;
-          }
-
-        } catch (error) {
-          console.log('[StreamingDAO removeStreaming] error = ', error);
-          resolve('fail');
+        if(errorCode) {
+          rejcet(bodyObject);
+        } else {
+          resolve('success');
         }
       });
-    });
+    })
+    .then((result) => {
+      return result;
+    })
+    .catch((error) => {
+      console.log('[StreamingDAO removeStreaming] error = ', error);
+    })
   }
 
   async removeCDN(instanceNo) {
@@ -267,32 +261,17 @@ class StreamingDAO {
     return new Promise(async (resolve, rejcet) => {
       request(option, (error, response, body) => {
         if(error) {
-          console.log('[StreamingDAO removeCDN] error = ', error);
           reject(error);
-        }
-        
-        // const bodyObject = JSON.parse(body);
-        // console.log('[StreamingDAO removeCDN] bodyObject = ', bodyObject);
-        try {
-          // const errorCode = bodyObject.error.errorCode;
-          // const responseError = bodyObject.responseError;
-
-          // if(errorCode) {
-          //   resolve('fail');
-          //   return;
-          // }
-
-          // if(responseError) {
-          //   resolve('fail');
-          //   return;
-          // }
-          
-          resolve('success');
-        } catch (error) {
-          console.log('[StreamingDAO removeCDN] error = ', error);
-          resolve('fail');
+        } else {
+          resolve(body);
         }
       });
+    })
+    .then((result) => {
+      return result;
+    })
+    .catch((error) => {
+      console.log('[StreamingRestDAO removeCDN] error = ', error);
     });
   }
 

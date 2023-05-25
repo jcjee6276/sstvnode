@@ -2,24 +2,24 @@ const connection = new (require('../model/MySQLConnection'))();
 
 class UserDAO {
   async updateUserCoin(coin, userId) {
-    return new Promise((resolve, reject) => {
+    try {
+      console.log('[UserDAO updateUserCoin] coin = ', coin);
+      console.log('[UserDAO updateUserCoin] userId = ', userId);
       connection.connect();
-
+  
       const sql = 'UPDATE USER SET COIN = ? WHERE USER_ID = ?';
       const param = [coin, userId];
 
       connection.query(sql, param, (error, result) => {
         if(error) {
           console.log('[UserDAO updateCoin] error = ', error);
-          connection.disconnect();
-          reject("fail");
         }
-
-      
-        // connection.disconnect();
-        resolve('success');
       });
-    });
+    } catch (error) {
+      console.log('[UserDAO updateUserCoin] error = ', error);
+    } finally {
+      connection.disconnect();
+    }
   }
 
   //1 : 광고신청 2: 광고신청 거절
@@ -40,8 +40,8 @@ class UserDAO {
     });
   }
 
-  async getUserCoin(userId) {
-    return new Promise(async (resolve, rejcet) => {
+  getUserCoin(userId) {
+    return new Promise((resolve, rejcet) => {
       connection.connect();
 
       const sql = 'SELECT COIN FROM USER WHERE USER_ID = ?'
@@ -59,7 +59,7 @@ class UserDAO {
           coin = result[0].COIN;
         }
         
-        // connection.disconnect(); 
+        console.log('[UserDAO getUserCoin] coin = ', coin);
         resolve(coin);
       });
     });

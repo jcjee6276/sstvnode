@@ -2,6 +2,7 @@ const e = require('cors');
 const streamingRestDAO = require('../DAO/StreamingRestDAO');
 const Redis = require('../model/Redis');
 const streamingDAO = new (require('../DAO/StreamingDAO'))();
+const moment = require('moment');
 
 class StreamingService {
   streamingRestDAO = new streamingRestDAO();
@@ -214,6 +215,8 @@ class StreamingService {
       const userId = JSON.parse((await Redis.client.get(sessionId + '_user'))).userId;
       const streaming = JSON.parse((await Redis.client.get(userId + '_onStreaming')));
       
+      streamingDAO.finishStreaming(streaming);
+
       return streaming;
     }
 
@@ -233,7 +236,7 @@ class StreamingService {
 
     const userId = (JSON.parse(await Redis.client.get(sessionId + '_user'))).userId;
     const streaming = JSON.parse(await Redis.client.get(userId + '_onStreaming'));
-    streaming.streamingEndTime = date.toFormat('YYYY-MM-DD/HH24:MI');
+    streaming.streamingEndTime = moment().format('YYYY-MM-DD/HH:mm');
     
     await Redis.client.set(userId + '_onStreaming', JSON.stringify(streaming));
     
@@ -275,16 +278,18 @@ class StreamingService {
   }
 
   async isStreamingOwner(sessionId) {
-    const userId = JSON.parse(await Redis.client.get(sessionId + '_user')).userId;
-
-    if(userId != null && userId != undefined) {
-      const streaming = Redis.client.get(userId + '_onStreaming');
-
-      if(streaming != null && streaming != undefined) {
-        return streaming;
-      }
-    }
+    const user =  await Redis.client.get(sessionId + '_user')
     
+    if(user) {
+      const userId = JSON.parse(user).userId;
+      if(userId != null && userId != undefined) {
+        const streaming = Redis.client.get(userId + '_onStreaming');
+  
+        if(streaming != null && streaming != undefined) {
+          return streaming;
+        }
+      }
+    }    
     return false;
   }
 
@@ -301,7 +306,14 @@ class StreamingService {
   }
   
   async validateUserStRole(sessionId) {
-    const stRoll = (JSON.parse(await Redis.client.get(sessionId + '_user'))).stRoll;
+    const user = JSON.parse(await Redis.client.get(sessionId + '_user'));
+    
+    let stRoll;
+    if(user) {
+      stRoll = (user).stRoll;
+      return stRoll
+    }
+    
     return stRoll;
   }
 
@@ -339,8 +351,6 @@ class StreamingService {
   }
 
   createStreamingObject(user, streamingWithAd, streamingWithOutAd, serviceUrlWithAd, serviceUrlWithOutAd, thumnailUrlWithAd, thumnailUrlWithOutAd) {
-    // const date = new Date();
-
     const userId = JSON.parse(user).userId
     const streamingObjectWithAd = JSON.parse(streamingWithAd);
     const streamingObjectWithOutAd = JSON.parse(streamingWithOutAd);
@@ -356,7 +366,7 @@ class StreamingService {
 
       'streamingCategory' : streamingObjectWithAd.category,
       'streamingTitle' : streamingObjectWithAd.content.channelName,
-      'streamingStartTime' : Date.now(),
+      'streamingStartTime' : moment().format('YYYY-MM-DD/HH:mm'),
       'streamingEndTime' : '',
       'totalStreamingViewer' : 0,
       'streamingViewer' : 0,

@@ -28,22 +28,31 @@ router.post('/addAdReq', upload.single('file'), (req, res) => {
   }
 });
 
-router.get('/updateProcessCode', (req, res) => {
+router.get('/updateProcessCode', async (req, res) => {
   try {
     const processCode = req.query.processCode;
     const adReqNo = req.query.adReqNo;
     const denyCode = req.query.denyCode;
 
-    adService.updateProcessCode(adReqNo, processCode, denyCode);
+    const result = await adService.updateProcessCode(adReqNo, processCode, denyCode);
+
+    let response;
+    if(result == 'success') {
+      response = new Data('success', '');
+    }else {
+      response = new Data('fail', '');
+    }
+
+    return res.json(response);
   } catch (error) {
     console.log('[AdRouter /updateAdProcessCode] error = ', error);
     res.status(500).json({ error: 'Server Internal Error' });
   }
 });
 
-router.get('/getAdReqList', (req, res) => {
+router.get('/getAdReqList', async (req, res) => {
   try {
-    const list = adService.getAdReqList();
+    const list = await adService.getAdReqList();
     res.json(list);
   } catch (error) {
     console.log('[AdRouter /getAdReqList] error = ', error);
@@ -64,14 +73,11 @@ router.get('/playAd', (req, res) => {
 router.get('/removeAllLiveCurtain',async (req, res) => {
   try {
     await adService.removeAllLiveCurtain();
-    res.json('test');
+    res.json('삭제완료');
   } catch (error) {
     console.log('[AdRouter /getAdReqList] error = ', error);
     res.status(500).json({ error: 'Server Internal Error' });
   }
 });
   
-
-
-
 module.exports = router;

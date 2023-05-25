@@ -6,6 +6,7 @@ const Jimp = require('jimp');
 const { error, timeStamp } = require('console');
 const CryptoJS = require('crypto-js');
 const { response } = require('express');
+const { captureRejectionSymbol } = require('events');
 const endpoint = new AWS.Endpoint('https://kr.object.ncloudstorage.com');
 const region = 'kr-standard';
 const mediaPath = 'public/donation/';
@@ -13,68 +14,6 @@ const mediaPath = 'public/donation/';
 
 
 class DonationDAO {
-  async textToImg(text, uuid) {
-    // 폰트 로드
-    const font = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
-  
-    // 원하는 이미지 크기 설정
-    const imageWidth = 400;
-    const imageHeight = 200;
-  
-    // 저장할 파일 경로 및 이름 설정
-    const fileName = uuid + '.png';
-  
-    // 새로운 이미지 생성 (투명 배경)
-    const image = new Jimp(imageWidth, imageHeight, 0x00000000);
-  
-    // 이미지에 텍스트 추가 (흰색 폰트)
-    const textOptions = {
-      text: text,
-      alignmentX: Jimp.HORIZONTAL_ALIGN_CENTER,
-      alignmentY: Jimp.VERTICAL_ALIGN_MIDDLE
-    };
-  
-    // 텍스트를 이미지 중앙에 맞추기 위해 텍스트 크기와 이미지 크기 비교
-    const textWidth = Jimp.measureText(font, text);
-    const textHeight = Jimp.measureTextHeight(font, text, imageWidth);
-    const textX = (imageWidth - textWidth) / 2;
-    const textY = (imageHeight - textHeight) / 2;
-  
-    // 이미지에 텍스트 추가
-    image.print(font, textX, textY, textOptions, imageWidth, imageHeight);
-  
-    // 이미지 저장
-    await image.writeAsync(mediaPath + fileName);
-  
-    return fileName;
-  }
-  
-
-  async textToMp3(inputText, uuid) {
-    var client_id = global.accessKey;
-    var client_secret = global.secretKey;
-  
-    var api_url = 'https://naveropenapi.apigw.ntruss.com/tts-premium/v1/tts';
-    var options = {
-      url: api_url,
-      form: { speaker: 'nara', volume: '0', speed: '0', pitch: '0', text: inputText, format: 'mp3' },
-      headers: { 'X-NCP-APIGW-API-KEY-ID': client_id, 'X-NCP-APIGW-API-KEY': client_secret },
-    };
-    
-    const fileName = uuid + '.mp3';
-    
-    console.log(mediaPath + fileName);
-    var writeStream = fs.createWriteStream(mediaPath + fileName);
-    var _req = request.post(options).on('response', function(response) {
-      console.log(response.statusCode); // 200
-      console.log(response.headers['content-type']);
-    });
-
-    await _req.pipe(writeStream);
-
-    return fileName;
-  }
-
   async uploadFileToObjectStorage(file, fileName) {  
     try {
       const S3 = new AWS.S3({
@@ -146,8 +85,6 @@ class DonationDAO {
             {
               'bucketName' : "donation",
               'filePath' : '/' + fileName,
-              'width' : 300,
-              'height' : 200
             },
           ]
         })
@@ -155,6 +92,7 @@ class DonationDAO {
   
       return new Promise((resolve, rejcet) => {
         request(option, (error, response, body) => {
+          console.log('[AdRestDAO createLiveCurtain] body = ', body);
           const bodyObject = JSON.parse(body);
           const errorCode = bodyObject.errorCode;  
 
@@ -167,6 +105,7 @@ class DonationDAO {
       })
       .then((result) =>{
         console.log('[AdDAO createLiveCurtain] result = ', result);
+        return result;
       })
       .catch((error) => {
         console.log('[AdDAO createLiveCurtain] error = ', error);
@@ -177,40 +116,46 @@ class DonationDAO {
   }
 
   async startLiveCurtain(channelId, curtainId) {
-    const url = `https://livestation.apigw.ntruss.com/api/v2/channels/${channelId}/curtain/insert`;
-    const method = 'POST';
-    const timestamp = Date.now().toString();
-    const signature = this.makeSignature(method, url, timestamp);
+    try {
+      console.log('[AdRestDAO startLiveCurtain] start');
 
-    const option = {
-      url : url,
-      method : method,
-      headers : {
-        'Content-Type' : 'application/json; charset=utf-8',
-        'x-ncp-apigw-timestamp' : timestamp,
-        'x-ncp-iam-access-key' : global.accessKey,
-        'x-ncp-apigw-signature-v2' : signature,
-        'x-ncp-region_code' : 'KR'
-      },
-      body : JSON.stringify({
-        contentId : [
-          curtainId
-        ],
-        insertTime : 1
-      })
-    }
-    
-    request.post(option, (error, response, body) => {
-      const bodyObject = JSON.parse(body);
-      const errorCode = bodyObject.errorCode;
+      const url = `https://livestation.apigw.ntruss.com/api/v2/channels/${channelId}/curtain/insert`;
+      const method = 'POST';
+      const timestamp = Date.now().toString();
+      const signature = this.makeSignature(method, url, timestamp);
 
-      if(errorCode) {
-        console.log('[DonationDAO startLiveCurtain] errorCode = ', bodyObject);
-        return;
+      const option = {
+        url : url,
+        method : method,
+        headers : {
+          'Content-Type' : 'application/json; charset=utf-8',
+          'x-ncp-apigw-timestamp' : timestamp,
+          'x-ncp-iam-access-key' : global.accessKey,
+          'x-ncp-apigw-signature-v2' : signature,
+          'x-ncp-region_code' : 'KR'
+        },
+        body : JSON.stringify({
+          contentId : [
+            curtainId
+          ],
+          insertTime : 1
+        })
       }
       
-      console.log('[DonationDAO startLiveCurtain] bodyObject = ', bodyObject);
-    });
+      request.post(option, (error, response, body) => {
+        const bodyObject = JSON.parse(body);
+        const errorCode = bodyObject.errorCode;
+
+        if(errorCode) {
+          console.log('[DonationDAO startLiveCurtain] errorCode = ', bodyObject);
+          return;
+        }
+        
+        console.log('[DonationDAO startLiveCurtain] bodyObject = ', bodyObject);
+      });
+    } catch (error) {
+      console.log('[AdRestDAO startLiveCurtain] error = ', error);
+    }
   }
 
   async getLiveCurtainList() {
@@ -300,21 +245,29 @@ class DonationDAO {
       
       const result = await new Promise(async (resolve, rejcet) => {
         request(option, (error, response, body) => {
-          const bodyObject = JSON.parse(body);
-          const errorCode = bodyObject.errorCode;
-          console.log('[AdRestDAO getCurtainStatus] bodyObject = ', bodyObject);
+          try {
+            const bodyObject = JSON.parse(body);
+            const errorCode = bodyObject.errorCode;
+            console.log('[AdRestDAO getCurtainStatus] bodyObject = ', bodyObject);
 
-          if (errorCode) {
-            console.log('[DonationDAO getCurtainStatus] errorCode = ', bodyObject);
-            rejcet(error);
-          }
-     
-          resolve(body);
-        });
-      });
+            if (errorCode) {
+              console.log('[AdRestDAO getCurtainStatus] errorCode = ', bodyObject);
+              rejcet(error);
+            }
       
-      const status = result.content.status;
-      return status;
+            const status = bodyObject.content.status;
+            resolve(status);
+          } catch (error) {
+            console.log('[AdRestDAO getCurtainStatus] error = ', error);
+          }
+        });
+      })
+      .catch((error) => {
+        console.log('[AdRestDAO getCurtainStatus] error = ', error);
+      })
+
+      console.log('[AdRestDAO getCurtainStatus] result = ', result);
+      return result;
     } catch (error) {
       console.log('[AdRestDAO getCurtainStatus] error = ', error);
     }
