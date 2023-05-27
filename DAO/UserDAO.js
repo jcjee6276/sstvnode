@@ -96,6 +96,28 @@ class UserDAO {
     }
   } 
 
+  async updateStRoll(userId, stRoll) {
+    try {
+      connection.connect();
+      
+      const sql = 'UPDATE USER SET ST_ROLL = ? WHERE USER_ID = ?';
+      const param = [stRoll , userId];
+
+      const result = await new Promise((resolve, rejcet) => {
+        connection.query(sql, param, (error, results) => {
+          if(error) {
+            resolve('fail');
+          }else {
+            resolve('success');
+          }
+        });
+      });
+      
+      return result;
+    } catch (error) {
+      console.log('[UserDAO updateStRoll] error = ', error);
+    }
+  }
   
 }
 

@@ -5,8 +5,9 @@ const moment = require('moment');
 const Data = require('../model/Data');
 
 router.post('/addReport', async (req, res) => {
+  const sessionId = req.cookies.NSESSIONID;
   const report = req.body;
-  const result = await reportService.addReport(report);
+  const result = await reportService.addReport(sessionId , report);
 
   let response;
   console.log(result);
@@ -52,8 +53,6 @@ router.get('/getReportList', async (req, res) => {
 router.get('/removeReport', async (req, res) => {
   const reportNo = req.query.reportNo
   const result = await reportService.removeReport(reportNo);
-
-  console.log('[router result]', result);
   
   let response;
   if(result == 'fail') {
@@ -61,7 +60,6 @@ router.get('/removeReport', async (req, res) => {
   }else {
     response = new Data('success','');
   }
-  
   res.json(response);
 });
 

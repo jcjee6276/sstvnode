@@ -12,6 +12,7 @@ const streamingRouter = require('./routes/StreamingRouter');
 const adRouter = require('./routes/AdRouter');
 const donationRouter = require('./routes/DonationRouter');
 const reportRouter = require('./routes/ReportRouter');
+const banRouter = require('./routes/BanRouter');
 
 //api 요청에 사용할 key
 global.accessKey = 'z4Xcnb9Fi7MmuSeksVf4';
@@ -40,17 +41,18 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+//라우터 경로
 app.use('/', indexRouter);
 app.use('/streaming', streamingRouter);
 app.use('/ad', adRouter);
 app.use('/donation', donationRouter);
 app.use('/report', reportRouter);
+app.use('/ban', banRouter);
 
 
 // 에러 핸들러
-app.use(function(err, req, res, next) {
-  console.log('[app.js] catch error');
-  console.error(err);
+app.use(function(error, req, res, next) {
+  console.log('[app.js] error = ', error);
   res.status(500).json({ error: 'Server Internal Error' });
 });
 
