@@ -1,5 +1,8 @@
 const CryptoJS = require('crypto-js');
+const { response } = require('express');
 const request = require('request');
+const axios = require('axios');
+const { DATE } = require('mysql/lib/protocol/constants/types');
 
 class StreamingDAO {
 
@@ -27,7 +30,6 @@ class StreamingDAO {
       record = {
         "type" : "NO_RECORD"
       }
-
       immediateOnAir = false;
     }
   
@@ -41,7 +43,7 @@ class StreamingDAO {
         'x-ncp-apigw-signature-v2' : signature,
         'x-ncp-region_code' : 'KR'
       },
-      body : JSON.stringify({
+      data : JSON.stringify({
         "channelName" : streamingTitle,
         "cdn" : {
           "createCdn" : true,
@@ -55,152 +57,133 @@ class StreamingDAO {
         "isStreamFailOver" : true
       })
     }
-  
-    return new Promise((resolve, reject) => {
-      request(option, (error, response, body) => {
-        const bodyObject = JSON.parse(body);
-        const errorCode = bodyObject.errorCode;  
-        
-        if(errorCode) {
-          reject(bodyObject);
-        }else {
-          const channelId = bodyObject.content['channelId']; 
-          resolve(channelId);
-        }
-      });
-    })
-    .then(result => {
+    
+    try {
+      const response = await axios(option);
+      const bodyObject = response.data;
+      
+      console.log('[StreamingRestDAO createChannel] response.data = ', response.data);
+      console.log('[StreamingRestDAO createChannel] bodyObject = ', bodyObject);
+
+      let result;
+      if(bodyObject.errorCode) {
+        result = 'fail';
+      }
+
+      if(bodyObject.content) {
+        result = bodyObject.content['channelId'];
+      }
+      
       return result;
-    })
-    .catch(error => {
-      console.log('[StreamingDAO createChannel] error = ', error);
-    })
+    } catch (error) {
+      console.log('[StreamingRestDAO createChannel] error = ', response.data);
+      return 'fail';
+    }
   }
 
   //스트리밍 채널의 정보 가져옴
-  getChannelInfo(channelId) {
-    const url = "https://livestation.apigw.ntruss.com/api/v2/channels/" + channelId;
+  async getChannelInfo(channelId) {
+    const url = `https://livestation.apigw.ntruss.com/api/v2/channels/${channelId}`;
     const timestamp = Date.now().toString();
-    const method = "GET";
+    const method = 'GET';
     const signature = this.makeSignature(method, url, timestamp);
   
-    const option = {
-      url : url,
-      method : method,
-      headers : {
-        'x-ncp-apigw-timestamp' : timestamp,
-        'x-ncp-iam-access-key' : global.accessKey,
-        'x-ncp-apigw-signature-v2' : signature,
-        'x-ncp-region_code' : 'KR'
-      }
-    }
-
-    return new Promise((resolve, rejcet) => {
-      request(option, (error, response, body) => {
-        const bodyObject = JSON.parse(body);
-        const errorCode = bodyObject.errorCode;  
-
-        if(errorCode) {
-          rejcet(bodyObject);
-        }else {
-          resolve(bodyObject);
-        }
-      });
-    })
-    .then(result => {
-      return result;
-    })
-    .catch(error => {
+    const options = {
+      url: url,
+      method: method,
+      headers: {
+        'x-ncp-apigw-timestamp': timestamp,
+        'x-ncp-iam-access-key': global.accessKey,
+        'x-ncp-apigw-signature-v2': signature,
+        'x-ncp-region_code': 'KR',
+      },
+    };
+  
+    try {
+      const response = await axios(options);
+      const bodyObject = response.data;
+  
+      return bodyObject;
+    } catch (error) {
       console.log('[StreamingDAO getChannelInfo] error = ', error);
-    });    
+    }
   }
 
-  //스트리밍의 ServiceURL을 가져옴
   async getServiceUrl(channelId) {
     const serviceUrlType = 'GENERAL';
-
     const url = `https://livestation.apigw.ntruss.com/api/v2/channels/${channelId}/serviceUrls?serviceUrlType=${serviceUrlType}`;
     const timestamp = Date.now().toString();
-    const method = "GET";
+    const method = 'GET';
     const signature = this.makeSignature(method, url, timestamp);
-
-    const option = {
-      url : url,
-      method : method, 
-      headers : {
-        'Content-Type' : 'application/json; charset=utf-8',
-        'x-ncp-apigw-timestamp' : timestamp,
-        'x-ncp-iam-access-key' : global.accessKey,
-        'x-ncp-apigw-signature-v2' : signature,
-        'x-ncp-region_code' : 'KR'
+  
+    const options = {
+      url: url,
+      method: method,
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        'x-ncp-apigw-timestamp': timestamp,
+        'x-ncp-iam-access-key': global.accessKey,
+        'x-ncp-apigw-signature-v2': signature,
+        'x-ncp-region_code': 'KR',
+      },
+    };
+  
+    try {
+      const response = await axios(options);
+      const bodyObject = response.data;
+      const errorCode = bodyObject.errorCode;
+  
+      if (errorCode) {
+        throw new Error('fail');
+      } else {
+        const serviceURL = bodyObject.content[0].url;
+        console.log('[StreamingRestDAO getServiceUrl] result = ', serviceURL);
+        return serviceURL;
       }
-    }
-    
-    return new Promise(async (resolve, rejcet) => {
-      request(option, (error, response, body) => {
-        const bodyObject = JSON.parse(body);
-        const errorCode = bodyObject.errorCode;  
-        
-        if(errorCode) {
-          rejcet('fail');
-        } else {
-          const serviceURL = bodyObject.content[0].url  
-          resolve(serviceURL);
-        }
-      });
-    })
-    .then((result) => {
-      console.log('[StreamingRestDAO getServiceUrl] result = ', result);
-      return(result);
-    })
-    .catch((error) => {
+    } catch (error) {
       console.log('[StreamingRestDAO getServiceUrl] error = ', error);
-    })
-  }
-
-  //채널의 썸네일 가져오기
-  async getThumbnail(channelId) {
-    const serviceUrlType = 'THUMBNAIL';
-
-    const url = `https://livestation.apigw.ntruss.com/api/v2/channels/${channelId}/serviceUrls?serviceUrlType=${serviceUrlType}`;
-    const timestamp = Date.now().toString();
-    const method = "GET";
-    const signature = this.makeSignature(method, url, timestamp);
-
-    const option = {
-      url : url,
-      method : method, 
-      headers : {
-        'Content-Type' : 'application/json; charset=utf-8',
-        'x-ncp-apigw-timestamp' : timestamp,
-        'x-ncp-iam-access-key' : global.accessKey,
-        'x-ncp-apigw-signature-v2' : signature,
-        'x-ncp-region_code' : 'KR'
-      }
     }
-    
-    return new Promise(async (resolve, rejcet) => {
-      request(option, (error, response, body) => {
-        const bodyObject = JSON.parse(body);
-        const errorCode = bodyObject.errorCode;  
-
-        if(errorCode) {
-          resolve('fail');
-          return;
-        } else {
-          const thumnailUrl = bodyObject.content[0].url  
-          resolve(thumnailUrl);
-        }
-      });
-    })
-    .then((result) => {
-      console.log('[StreamingDAO getThumnail] result = ', result);
-      return(result);
-    })
-    .catch((error) => {
-      console.log('[StreamingDAO getThumnail] error = ', error);
-    });
   }
+  
+async getThumbnail(channelId) {
+  const serviceUrlType = 'THUMBNAIL';
+
+  const url = `https://livestation.apigw.ntruss.com/api/v2/channels/${channelId}/serviceUrls?serviceUrlType=${serviceUrlType}`;
+  const timestamp = Date.now().toString();
+  const method = 'GET';
+  const signature = this.makeSignature(method, url, timestamp);
+
+  const options = {
+    url: url,
+    method: method,
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      'x-ncp-apigw-timestamp': timestamp,
+      'x-ncp-iam-access-key': global.accessKey,
+      'x-ncp-apigw-signature-v2': signature,
+      'x-ncp-region_code': 'KR',
+    },
+  };
+
+  try {
+    const response = await axios(options);
+    const bodyObject = response.data;
+    const errorCode = bodyObject.errorCode;
+
+    if (errorCode) {
+      return 'fail';
+    } else {
+      const thumbnailUrl = bodyObject.content[0].url;
+      console.log('[StreamingDAO getThumbnail] result = ', thumbnailUrl);
+      return thumbnailUrl;
+    }
+  } catch (error) {
+    console.log('[StreamingDAO getThumbnail] error = ', error);
+  }
+}
+
+
+
 
   async removeStreaming(channelId) {
     const url = `https://livestation.apigw.ntruss.com/api/v2/channels/${channelId}`;
@@ -208,102 +191,116 @@ class StreamingDAO {
     const timestamp = Date.now().toString();
     const signature = this.makeSignature(method, url, timestamp);
 
-    const option = {
-      url : url,
-      method : method, 
-      headers : {
-        'Content-Type' : 'application/json; charset=utf-8',
-        'x-ncp-apigw-timestamp' : timestamp,
-        'x-ncp-iam-access-key' : global.accessKey,
-        'x-ncp-apigw-signature-v2' : signature,
-        'x-ncp-region_code' : 'KR'
-      }
-    }
+    const options = {
+      url: url,
+      method: method,
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        'x-ncp-apigw-timestamp': timestamp,
+        'x-ncp-iam-access-key': global.accessKey,
+        'x-ncp-apigw-signature-v2': signature,
+        'x-ncp-region_code': 'KR',
+      },
+    };
 
-    return new Promise((resolve, rejcet) => {
-      request(option, (error, response, body) => {
-        const bodyObject = JSON.parse(body);
-        const errorCode = bodyObject.errorCode;
-        
-        if(errorCode) {
-          rejcet(bodyObject);
-        } else {
-          resolve('success');
-        }
-      });
-    })
-    .then((result) => {
-      return result;
-    })
-    .catch((error) => {
-      console.log('[StreamingDAO removeStreaming] error = ', error);
-    })
+    try {
+      const response = await axios(options);
+      const bodyObject = response.data;
+      const errorCode = bodyObject.errorCode;
+
+      if (errorCode) {
+        throw new Error(bodyObject);
+      } else {
+        return 'success';
+      }
+    } catch (error) {
+      console.log('[StreamingDAO removeStreaming] error = ');
+    }
   }
 
   async removeCDN(instanceNo) {
+    console.log('[StreamingRestDAO removeCDN] instanceNo = ', instanceNo);
     const url = `https://ncloud.apigw.ntruss.com/cdn/v2/requestCdnPlusPurge?cdnInstanceNo=${instanceNo}&isWholePurge=true&isWholeDomain=true&responseFormatType=JSON`
-
+  
     const method = 'GET';
     const timestamp = Date.now().toString();
     const signature = this.makeSignature(method, url, timestamp);
-    
-    const option = {
-      url : url,
-      method : method, 
-      headers : {
-        'Content-Type' : 'application/json; charset=utf-8',
-        'x-ncp-apigw-timestamp' : timestamp,
-        'x-ncp-iam-access-key' : global.accessKey,
-        'x-ncp-apigw-signature-v2' : signature,
-      }
-    }
+  
+    const options = {
+      url: url,
+      method: method,
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        'x-ncp-apigw-timestamp': timestamp,
+        'x-ncp-iam-access-key': global.accessKey,
+        'x-ncp-apigw-signature-v2': signature,
+      },
+    };
+  
+    try {
+      const response = await axios(options);
+      console.log('[StreamingRestDAO removeCDN] response = ', response);
 
-    return new Promise(async (resolve, rejcet) => {
-      request(option, (error, response, body) => {
-        if(error) {
-          reject(error);
-        } else {
-          resolve(body);
-        }
-      });
-    })
-    .then((result) => {
+      const result = response.data;
       return result;
-    })
-    .catch((error) => {
-      console.log('[StreamingRestDAO removeCDN] error = ', error);
-    });
+    } catch (error) {
+      console.log('[StreamingRestDAO removeCDN] error');
+    }
+  }
+  
+  async finishRecord(channelIdWithOutAd) {
+    try {
+      const url = `https://livestation.apigw.ntruss.com/api/v2/channels/${channelIdWithOutAd}/stopRecord`;
+      const method = 'PUT';
+      const timestamp = Date.now().toString();
+      const signature = this.makeSignature(method, url, timestamp);
+
+      const options = {
+        url: url,
+        method: method,
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+          'x-ncp-apigw-timestamp': timestamp,
+          'x-ncp-iam-access-key': global.accessKey,
+          'x-ncp-apigw-signature-v2': signature,
+          'x-ncp-region_code': 'KR',
+        },
+      };
+
+      const response = await axios(options);
+      const result = response.data;
+      console.log('[StreamingRestDAO finishRecord] result = ', result);
+
+      return result;
+    } catch (error) {
+      console.log('[StreamingRestDAO finishRecord] error = ', error);
+    }
   }
 
-  async sendStreamingToSpring(streaming) {
-    const url = "http://localhost:8080/streaming/receiveStreamingByNode";
-    const method= 'POST';
+  async stopStreaming(channelId) {
+    try {
+      const url = `https://livestation.apigw.ntruss.com/api/v2/channels/${channelId}/off`;
+      const method = 'PUT';
+      const timestamp = Date.now().toString();
+      const signature = this.makeSignature(method, url, timestamp);
 
-    const option = {
-      url : url,
-      method : method,
-      headers : {
-        'Content-Type' : 'application/json; charset=utf-8',
-      }
-    }
-
-    return new Promise(async (resolve, rejcet) => {
-      request(option, (error, response, body) => {
-        try {
-          const bodyObject = JSON.parse(body);
-          
-          if(bodyObject.result == 'success') {
-            resolve('success');
-            return;
-          }    
-
-          resolve('fail');
-        } catch (error) {
-          console.log('[StreamingDAO sendStreamingToSpring] error = ', error);
-          resolve('fail');
+      const option = {
+        url : url,
+        method : method,
+        headers : {
+          'Content-Type' : 'application/json; charset=utf-8',
+          'x-ncp-apigw-timestamp' : timestamp,
+          'x-ncp-iam-access-key' : global.accessKey,
+          'x-ncp-apigw-signature-v2' : signature,
+          'x-ncp-region_code' : 'KR'
         }
-      });
-    });
+      }
+
+      const result = await axios(option);
+      console.log('[StreamingRestDAO stopStreaming] result = ', result.data);
+    } catch (error) {
+      console.log('[StreamingRestDAO stopStreaming] error');
+    }
   }
 
   //API 요청 헤더 생성
@@ -328,6 +325,8 @@ class StreamingDAO {
   createUrlForSignature(url) { 
     return url.substring(url.indexOf('com') + 3);
   }
+
+  
 }
 
 module.exports = StreamingDAO;

@@ -1,7 +1,8 @@
 class Data {
-  constructor(result, data) {
+  constructor(result, firstData, secondData) {
     this.result = result;
-    this.data = data
+    this.firstData = firstData;
+    this.secondData = secondData;
   }
 }
 

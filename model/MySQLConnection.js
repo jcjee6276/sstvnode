@@ -15,27 +15,27 @@ class MySQLConnection {
 
   connect() {
     try {
-      this.connection = mysql.createConnection(this.config);
+      this.connection = mysql.createPool(this.config);
     
-      this.connection.connect((error) => {
-        if(error) {
-          console.log('[MySQLConnection connect] error = ', error);
-        }
-      });
+      // this.connection.connect((error) => {
+      //   if(error) {
+      //     console.log('[MySQLConnection connect] error = ', error);
+      //   }
+      // });
     } catch (error) {
       console.log('[MySQLConnetcion connect] error = ', error);
     }
   }
 
   disconnect() {
-    try {
-      if(this.connection) {
-        this.connection.end();
-        console.log('[MySQLConnection disconnect] Close Connection');
-      }  
-    } catch (error) {
-      console.log('[MySQLConnection disconnect] error = ', error);
-    }
+    // try {
+    //   if(this.connection) {
+    //     this.connection.end();
+    //     console.log('[MySQLConnection disconnect] Close Connection');
+    //   }  
+    // } catch (error) {
+    //   console.log('[MySQLConnection disconnect] error = ', error);
+    // }
   }
 
   query(sql, params, callback) {

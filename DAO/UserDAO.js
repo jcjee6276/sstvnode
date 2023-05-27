@@ -64,6 +64,39 @@ class UserDAO {
       });
     });
   }
+
+  async getUserTicket(userId) {
+    try {
+      connection.connect();
+
+      const sql = 'SELECT * FROM TICKET WHERE USER_ID = ?';
+      const param = [userId];
+      const response = [];
+      
+      const result = await new Promise((resolve, rejcet) => {
+        connection.query(sql, param, (error, result) => {
+          if(error) {
+            rejcet(error);
+          }else {
+            resolve(result);
+          }
+        });
+      });
+
+      if(result.length > 0) {
+        for(const data of result) {
+          response.push({...data});
+        }
+      }
+      return response;
+    } catch (error) {
+      console.log('[UserDAO getUserTicket] error = ', error);
+    } finally {
+      connection.disconnect();
+    }
+  } 
+
+  
 }
 
 module.exports = UserDAO;
