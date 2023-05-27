@@ -2,7 +2,7 @@ const io = require('socket.io-client');
 const socket = io('http://localhost:3000');
 
 
-const roomName = 'user3'
+const roomName = 'user1'
 const dataToSend = {
   userId : '이동욱'
 }

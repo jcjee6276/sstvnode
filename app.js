@@ -11,6 +11,7 @@ const indexRouter = require('./routes/index');
 const streamingRouter = require('./routes/StreamingRouter');
 const adRouter = require('./routes/AdRouter');
 const donationRouter = require('./routes/DonationRouter');
+const reportRouter = require('./routes/ReportRouter');
 
 //api 요청에 사용할 key
 global.accessKey = 'z4Xcnb9Fi7MmuSeksVf4';
@@ -43,6 +44,7 @@ app.use('/', indexRouter);
 app.use('/streaming', streamingRouter);
 app.use('/ad', adRouter);
 app.use('/donation', donationRouter);
+app.use('/report', reportRouter);
 
 
 // 에러 핸들러

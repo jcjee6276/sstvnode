@@ -1,25 +1,10 @@
-const donationDAO = new (require('./DAO/DonationDAO'))();
-const moment = require('moment');
+const userDAO = new (require('./DAO/UserDAO'))();
+const streamingService = new(require('./service/StreamingService'))();
 
+result = {"content":{"recordList":{"1868285":{"recordType":"MP4","channelId":"ls-20230526170737-lCw5q","status":"RECORDING","recordSeq":727001,"streamSeq":173029,"recordBeginTime":1685089769000,"createdTime":1685089769000,"fileName":"173029-727001-202305261729.mp4","objectStorageUrl":"-"},"1868286":{"recordType":"HLS","channelId":"ls-20230526170737-lCw5q","status":"RECORDING","recordSeq":727001,"streamSeq":173029,"recordBeginTime":1685089769000,"createdTime":1685089769000,"resolution":"1920x1080","fileName":"1080p-16-9/playlist.m3u8","videoBitrate":5000000,"audioBitrate":192000,"videoFrameRate":30.0,"audioCodec":"AAC","objectStorageUrl":"-"},"1868287":{"recordType":"HLS","channelId":"ls-20230526170737-lCw5q","status":"RECORDING","recordSeq":727001,"streamSeq":173029,"recordBeginTime":1685089769000,"createdTime":1685089769000,"resolution":"1280x720","fileName":"720p-16-9/playlist.m3u8","videoBitrate":2500000,"audioBitrate":128000,"videoFrameRate":30.0,"audioCodec":"AAC","objectStorageUrl":"-"},"1868288":{"recordType":"HLS","channelId":"ls-20230526170737-lCw5q","status":"RECORDING","recordSeq":727001,"streamSeq":173029,"recordBeginTime":1685089769000,"createdTime":1685089769000,"resolution":"854x480","fileName":"480p-16-9/playlist.m3u8","videoBitrate":1200000,"audioBitrate":128000,"videoFrameRate":30.0,"audioCodec":"AAC","objectStorageUrl":"-"},"1868289":{"recordType":"HLS","channelId":"ls-20230526170737-lCw5q","status":"RECORDING","recordSeq":727001,"streamSeq":173029,"recordBeginTime":1685089769000,"createdTime":1685089769000,"resolution":"640x360","fileName":"360p-16-9/playlist.m3u8","videoBitrate":800000,"audioBitrate":96000,"videoFrameRate":25.0,"audioCodec":"AAC","objectStorageUrl":"-"}}},"total":5}
 
-// test();
-
-// async function test(userId) {
-//   const result = await donationDAO.getUserCoin('user1')
-//   console.log('result = ', result);
-// }
-
-const donation = {
-  USER_ID : 'user1',
-  STREAMING_USER_ID : 'user20',
-  STREAMING_NO : 30,
-  DONATION_AMOUNT : 10000,
-  DONATION_CONTENT : '저장테스트입니다.',
-  DONATION_DATE : moment().format('YYYY-MM-DD/HH:mm')
-}
-
-donationDAO.addDonation(donation);
-
-
+const map = new Map(Object.entries(result.content.recordList));
+const firstEntry = map.values().next().value;
+console.log('firstEntry = ', firstEntry);
 
 

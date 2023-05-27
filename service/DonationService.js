@@ -5,9 +5,8 @@ const Redis = require('../model/Redis');
 
 class DonationService {
   
-  async addDonation(sessionId ,donation) {
+  async addDonation(sessionId ,donation, voiceType) {
     try {
-      console.log('[DonationService addDonation] donation = ', donation);
       const user = await Redis.client.get(sessionId + '_user');
     
       if(user) {
@@ -16,17 +15,21 @@ class DonationService {
   
         if(this.validateUserCoin(userId, donationAmount)) {
           const coin = await userDAO.getUserCoin(userId);
-          console.log('[DonationService addDonation] coin = ', coin);
           const updateCoin = (coin - donationAmount);
-          
           
           userDAO.updateUserCoin(updateCoin, userId);
           userDAO.addUserCoinHistory(userId, donationAmount, 0);
-          // donationRestDAO.textToMp3(donation.DONATION_CONTENT);
+          donationDAO.addDonation(donation);
+
+          const content = `${userId}님이 ${donationAmount}원을 후원하였습니다.  ` + donation.DONATION_CONTENT;
+          donationRestDAO.textToMp3(content, voiceType);
+
+          return 'success';
         }
       }
     } catch (error) {
       console.log('[DonationService addDonation] error = ', error);
+      return 'fail';
     }
   }
 

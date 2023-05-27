@@ -3,6 +3,7 @@ var router = express.Router();
 const StreamingService = require('../service/StreamingService');
 const streamingService = new StreamingService();
 var Data = require('../model/Data');
+const { DATE } = require('mysql/lib/protocol/constants/types');
 
 
 /* 
@@ -90,9 +91,9 @@ router.get('/getServiceUrl', async (req, res) => {
 router.get('/getMyStreamingPage', async (req, res) => {
   try {
     const sessionId = req.cookies.NSESSIONID;
-    const _onStreaming =  await streamingService.getStremaing(sessionId);
+    const _onStreaming =  await streamingService.getMyStreamingPage(sessionId);
 
-    resposne = new Data('success', _onStreaming);
+    resposne = new Data('success', _onStreaming, _onStreaming.serviceUrlWithOutAd);
     res.json(resposne);
   } catch (error) {
     console.log('[Streaming Router /getStreaming] error = ', error);
@@ -103,17 +104,25 @@ router.get('/getMyStreamingPage', async (req, res) => {
 
 router.get('/getStreamingViewerPage', async (req, res) => {
   try {
-    const userId = req.query.userId;
-    const result = await streamingService.getStreamingByUserId(userId);
+    const streamingUserId = req.query.streamingUserId;
+    const sessionId = req.cookies.NSESSIONID;
 
-    let response;
-    if(result == 'fail') {
-      response = new Data('fail', '');
-      res.json(response);
-      return;
+    let response
+    if(sessionId) {
+      const result = await streamingService.getStreamingViewerPage(sessionId, streamingUserId);
+
+      response = new Data('success', result.streaming, result.serviceUrl);
+      if(result == '1') {
+        response = new Data('fail', '1');
+      }
+      if(result == '2') {
+        response = new Data('fail', '2');
+      }
+    } else {
+      const result = await streamingService.nonUserGetStreamingViewerPage(streamingUserId);
+      response = new Data('success', result.streaming, result.serviceUrl);
     }
 
-    response = new Data('success', result);
     res.json(response);
   } catch (error) {
     console.log('[Streaming Router /getStreamingViewerPage] error = ', error);
@@ -195,14 +204,16 @@ router.get('/finishStreaming', async (req, res) => {
   }
 });
 
-//test
-router.get('/sendStreamingToSpring', async (req ,res) => {
-  const sessionId = req.cookies.NSESSIONID;
-  const result = await streamingService.sendStreamingToSpring(sessionId);
-  console.log('[StreamingRouter /sendStreamingToSpring] result = ', result);
-  res.json('success');
+router.get('/finishRecord', async (req, res) => {
+  try {
+    const streamingUserId = req.query.streamingUserId;
+    const result = await streamingService.finishRecord(streamingUserId);
+    console.log('[StreamingRouter /finishRecord] result = ', result);  
+
+  } catch (error) {
+    console.log('[StreamingRouter /finishStreaming] error = ', error);
+  }
+  
 });
-
-
 
 module.exports = router;
