@@ -64,4 +64,46 @@ router.get('/getStreamingRollBanList', async (req, res) => {
   res.json(response);
 });
 
+router.post('/addStreamingBan', async (req, res) => {
+  const ban = req.body;  
+  const result = await banService.addStreamingBan(ban);
+
+  let response;
+  if(result == 'fail') {
+    response = new Data('fail', '');
+  }else {
+    response = new Data('success', '');
+  }
+  
+  res.json(response);
+});
+
+router.get('/getStreamingBan', async (req, res) => {
+  const streamingNo = req.query.streamingNo;
+  const result = await banService.getStreamingBan(streamingNo);
+
+  let response;
+  if(result == 'fail') {
+    response = new Data('fail', '');
+  }else {
+    response = new Data('success', result);
+  }
+
+  res.json(response);
+});
+
+router.get('/getStreamingBanList', async (req, res) => {
+  const userId = req.query.userId;
+  console.log('[BanRouter /getStreamingBanList] userId = ', userId);
+  const result = await banService.getStreamingBanList(userId);
+
+  let response;
+  if(result == 'fail') {
+    response = new Data('fail', '');
+  }else {
+    response = new Data('success', result);
+  }
+
+  res.json(response);
+});
 module.exports = router;

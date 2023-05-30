@@ -205,16 +205,14 @@ async getThumbnail(channelId) {
 
     try {
       const response = await axios(options);
-      const bodyObject = response.data;
-      const errorCode = bodyObject.errorCode;
+      const content = response.data.content;
 
-      if (errorCode) {
-        throw new Error(bodyObject);
-      } else {
+      if(content) {
         return 'success';
       }
     } catch (error) {
-      console.log('[StreamingDAO removeStreaming] error = ');
+      console.log('[StreamingDAO removeStreaming] error = ', error.response.data);
+      return 'fail';
     }
   }
 
@@ -268,12 +266,14 @@ async getThumbnail(channelId) {
       };
 
       const response = await axios(options);
+      
       const result = response.data;
       console.log('[StreamingRestDAO finishRecord] result = ', result);
 
       return result;
     } catch (error) {
-      console.log('[StreamingRestDAO finishRecord] error = ', error);
+      console.log('[StreamingRestDAO finishRecord] error = ', error.response.data);
+      return 'fail';
     }
   }
 
@@ -296,10 +296,14 @@ async getThumbnail(channelId) {
         }
       }
 
-      const result = await axios(option);
-      console.log('[StreamingRestDAO stopStreaming] result = ', result.data);
+      const result = await axios(option);      
+      const content = result.data.content;
+
+      if(content) {
+        return 'success';
+      }
     } catch (error) {
-      console.log('[StreamingRestDAO stopStreaming] error');
+      console.log('[StreamingRestDAO stopStreaming] error = ', error.response.data);
     }
   }
 

@@ -64,6 +64,36 @@ class StreamingDAO {
       connection.disconnect();
     }
   }
+
+  async getStreaming(streamingNo) {
+    try {
+      connection.connect();
+
+      const sql = 'SELECT * FROM STREAMING WHERE STREAMING_NO = ?';
+      const param = [streamingNo];
+
+      const result = await new Promise((resolve, reject) => {
+        connection.query(sql, param, (error, results) => {
+          if(error) {
+            console.log('[StreamingDAO getStreaming] error = ', error);
+            resolve('fail');
+          }else {
+            resolve(results);
+          }
+        });  
+      });
+
+      let response;
+      if(result.length > 0) {
+        response = {...result[0]};
+      }
+
+      return response;
+    } catch (error) {
+      console.log('[StreamingDAO getStreaming] error = ', error);
+      return 'fail';
+    }
+  }
 }
 
 module.exports = StreamingDAO;

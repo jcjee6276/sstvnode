@@ -265,17 +265,12 @@ class StreamingService {
   async finishRecord(sessionId) {
     try {
       const user = await Redis.client.get(sessionId + '_user');
-      console.log('[StreamingService finishRecord] user = ', user);
 
       if(user) {
         const userId = JSON.parse(user).userId;
-        console.log('[StreamingService finishRecord] userId = ', userId);
-
         const streaming = JSON.parse(await Redis.client.get(userId + '_onStreaming'));
-        console.log('[StreamingService finishRecord] streaming = ', streaming);
 
         const result = await streamingRestDAO.finishRecord(streaming.channelIdWithOutAd);
-        console.log('[StreamingService finishRecord] result = ', result);
 
         if(result.content) {
           const recordList = result.content.recordList;
@@ -401,8 +396,8 @@ class StreamingService {
     const channelIdWithAd = JSON.parse((await Redis.client.get(userId + '_onStreaming'))).channelIdWithAd;
     const channelIdWithOutAd = JSON.parse((await Redis.client.get(userId + '_onStreaming'))).channelIdWithOutAd;
     
-    streamingRestDAO.removeStreaming(channelIdWithAd);
-    streamingRestDAO.removeStreaming(channelIdWithOutAd);
+    await streamingRestDAO.removeStreaming(channelIdWithAd);
+    await streamingRestDAO.removeStreaming(channelIdWithOutAd);
   }
 
   async removeCDN(sessionId) {

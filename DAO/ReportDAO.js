@@ -88,9 +88,7 @@ class ReportDAO {
 
       let response = [];
 
-      for(const data of result) {
-        response.push({...result});
-      }
+      response.push({...result});
 
       console.log('[ReportDAO getReportList] response = ', response);
       return response;

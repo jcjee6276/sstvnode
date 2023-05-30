@@ -89,5 +89,69 @@ class BanDAO {
       console.log('[BanDAO getStreamingRollBan] error = ',error);
     }
   }
+
+  async addStreamingBan(streaming) {
+    try {
+      connection.connect();
+
+      let currentTime = moment().format('YYYY-MM-DD/HH:mm');
+
+      const sql = 'UPDATE STREAMING SET BAN_TYPE = ?, BAN_CONTENT = ?, BAN_DATE = ? ' + 
+      ', STREAMING_TITLE = ?, STREAMING_CATEGORY = ?, STREAMING_START_TIME = ?, STREAMING_END_TIME = ? ' + 
+       ', TOTAL_STREAMING_VIEWER = ? WHERE STREAMING_NO = ?';
+      const param = [
+        streaming.banType, 
+        streaming.banContent, 
+        currentTime, 
+        streaming.streamingTitle,
+        streaming.streamingCategory,
+        streaming.streamingStartTime,
+        currentTime,
+        streaming.totalStreamingViewer,
+        streaming.streamingPk
+      ];
+
+      const result = await new Promise((resolve, rejcet) => {
+        connection.query(sql, param, (error, results) => {
+          if(error) {
+            console.log('[BanDAO addStreamingBan] error = ', error);
+            resolve('fail');
+          } else {
+            resolve('success');
+          }
+        });
+      });
+
+      console.log('[BanDAO addStreamingBan] result = ', result);
+      return result;
+    } catch (error) {
+      console.log('[BanDAO addStreamingBan] error = ', error);
+    }
+  }
+
+  async getStreamingBanList(userId) {
+    try {
+      connection.connect();
+
+      const sql = 'SELECT * FROM STREAMING WHERE USER_ID = ? AND BAN_TYPE IS NOT NULL';
+      const param = [userId];
+
+      const result = await new Promise((resolve, reject) => {
+        connection.query(sql, param, (error, results) => {
+          if(error) {
+            console.log('[BanDAO getStreamingBanList] error = ', error);
+            resolve('fail');
+          }else {
+            resolve(results);
+          }
+        });  
+      });
+
+      const response = {...result};
+      return response;
+    } catch (error) {
+      console.log('[BanDAO getStreamingBanList] error = ', error);
+    } 
+  }
 }
 module.exports = BanDAO;
