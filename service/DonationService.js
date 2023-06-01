@@ -2,30 +2,32 @@ const donationRestDAO = new (require('../DAO/DonationRestDAO'))();
 const donationDAO = new (require('../DAO/DonationDAO'))();
 const userDAO = new (require('../DAO/UserDAO'))();
 const Redis = require('../model/Redis');
+const sockHandler = require('../sokets/socketHandler');
 
 class DonationService {
   
-  async addDonation(sessionId ,donation, voiceType) {
+  async addDonation(donation, voiceType) {
     try {
-      const user = await Redis.client.get(sessionId + '_user');
-    
-      if(user) {
-        const userId =  JSON.parse(user).userId;
-        const donationAmount = donation.DONATION_AMOUNT
-  
-        if(this.validateUserCoin(userId, donationAmount)) {
-          const coin = await userDAO.getUserCoin(userId);
-          const updateCoin = (coin - donationAmount);
-          
-          userDAO.updateUserCoin(updateCoin, userId);
-          userDAO.addUserCoinHistory(userId, donationAmount, 0);
-          donationDAO.addDonation(donation);
+      const userId =  donation.USER_ID;
+      const streamerId = donation.STREAMING_USER_ID;
+      const donationAmount = donation.DONATION_AMOUNT
 
-          const content = `${userId}님이 ${donationAmount}원을 후원하였습니다.  ` + donation.DONATION_CONTENT;
-          donationRestDAO.textToMp3(content, voiceType);
+      if(this.validateUserCoin(userId, donationAmount)) {
+        const coin = await userDAO.getUserCoin(userId);
+        const updateCoin = (coin - donationAmount);
+        
+        userDAO.updateUserCoin(updateCoin, userId);
+        userDAO.addUserCoinHistory(userId, donationAmount, 0);
+        donationDAO.addDonation(donation);
 
-          return 'success';
-        }
+        const content = `${userId}님이 ${donationAmount}원을 후원하였습니다.  ` + donation.DONATION_CONTENT;
+        const fileName = `${userId}_${streamerId}.mp3`;
+        
+        await donationRestDAO.textToMp3(content, voiceType, fileName);
+        setTimeout(async() => {
+          await donationRestDAO.uploadFileToObjectStorage(fileName);
+        }, 2000);
+        return 'success';
       }
     } catch (error) {
       console.log('[DonationService addDonation] error = ', error);
@@ -55,6 +57,23 @@ class DonationService {
       return false;
     }
     return true;
+  }
+
+  async getUserBySessionId(sessionId) {
+    try {
+      const user = await Redis.client.get(sessionId + '_user');
+
+      if(user) {
+        const userId = (JSON.parse(user)).userId;
+        return userId;
+      }else {
+        return 'fail';
+      }
+    } catch (error) {
+      console.log('[DonationService getUserBySessionId] error = ', error);
+      return 'fail';
+    }
+
   }
 }
 module.exports = DonationService;

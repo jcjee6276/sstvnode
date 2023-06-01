@@ -141,7 +141,8 @@ class StreamingDAO {
         return serviceURL;
       }
     } catch (error) {
-      console.log('[StreamingRestDAO getServiceUrl] error = ', error);
+      console.log('[StreamingRestDAO getServiceUrl] error = ', error.response.data);
+      return 'fail';
     }
   }
   
@@ -178,7 +179,8 @@ async getThumbnail(channelId) {
       return thumbnailUrl;
     }
   } catch (error) {
-    console.log('[StreamingDAO getThumbnail] error = ', error);
+    console.log('[StreamingDAO getThumbnail] error = ', error.response.data);
+    return 'fail';
   }
 }
 

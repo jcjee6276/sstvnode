@@ -9,7 +9,6 @@ var debug = require('debug')('sstv:server');
 var http = require('http');
 const cors = require("cors");
 const {Server} = require("socket.io");
-const socketHandler = require('../sokets/socketHandler');
 const socketEventHandler = require('../sokets/socketHandler');
 
 
@@ -18,7 +17,7 @@ const socketEventHandler = require('../sokets/socketHandler');
  * Get port from environment and store in Express.
  */
 
-var port = normalizePort(process.env.PORT || '3000');
+var port = normalizePort(process.env.PORT || '3001');
 app.set('port', port);
 
 /**

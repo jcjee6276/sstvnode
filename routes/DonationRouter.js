@@ -7,6 +7,8 @@ const moment = require('moment');
 router.post('/addDonation', async (req, res) => {
   try {
     const sessionId = req.cookies.NSESSIONID;
+    let result;
+    let response;
 
     const donation = {
       USER_ID : req.body.userId,
@@ -17,9 +19,8 @@ router.post('/addDonation', async (req, res) => {
       DONATION_DATE : moment().format('YYYY-MM-DD/HH:mm')
     }
     const voiceType = req.body.voiceType
-    const result = await donationService.addDonation(sessionId, donation, voiceType);  
+    result = await donationService.addDonation(donation, voiceType);  
 
-    let response;
     if(result == 'success') {
       response = new Data('success', '');
     } else {

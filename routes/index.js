@@ -10,26 +10,30 @@ router.get('/', function(req, res, next) {
   res.json("[Start Node Server]")
 });
 
-/* 
-나중에 Spring의 User 만들어지면 model에 user 만들어서 user 담기 + 로그아웃도 구현
-*/
-// router.post('/addCookie', (req, res, next) => {
-//   // const {userId, password} = req.body.data;
-//   console.log('req.body.data = ', req.body.data);
-  
-  
+router.post('/testLogin', async (req, res, next) => {
+  try {
+    const user = req.body;
 
-//   const sessionId = v4();
-  
-//   // try {
-//   //   Redis.client.set(sessionId, userId);  
-//   // } catch (error) {
-//   //   console.log('[index.js /addCookie] error = ', error);
-//   //   return error;
-//   // }
-  
-//   res.json(sessionId);
-// });
+    if(user){
+      const sessionId = req.cookies.NSESSIONID;
+      if(sessionId == null || sessionId == undefined) {
+        const sessionId = v4();
+
+        await Redis.client.set(sessionId + '_user', JSON.stringify(user));
+        res.cookie('NSESSIONID', sessionId, 
+        { 
+          httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 
+        });
+        res.json(new Data('success', 'test'));
+        return;
+      }
+    }
+  } catch(error) {
+    console.log('[index.js /login] error = ', error);
+    res.status(500).json({ error: 'Server Internal Error' });
+  }  
+});
+
 
 router.post('/removeCookie', (req, res, next) => {
   console.log('[index.js /removeCookie] req.body.data = ', req.body.data);
@@ -56,7 +60,6 @@ router.post('/addCookie', async (req, res) => {
       const sessionId = v4();
 
       //임시 유저
-      console.log('sessionId = ', sessionId);
       await Redis.client.set(sessionId + '_user', JSON.stringify(user));
       res.json(sessionId);
       return;

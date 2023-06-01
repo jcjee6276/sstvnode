@@ -35,7 +35,11 @@ global.clientSecret = 'HAqoUe2ZG2GxgZDVweFjB4DicnttKodNFP2yfp6y';
 const app = express();
 
 app.use(logger('dev'));
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:3000', // 클라이언트의 도메인
+  credentials: true // withCredentials 활성화
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());

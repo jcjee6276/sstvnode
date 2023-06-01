@@ -16,6 +16,8 @@ const { DATE } = require('mysql/lib/protocol/constants/types');
 router.get('/addStreaming', async (req, res, next) => {
   try {
     const sessionId = req.cookies.NSESSIONID;
+    console.log('[StreamingRouter /addStreaming] sessionId = ', sessionId);
+
     const resultCode =  await streamingService.validateAddStreaming(sessionId);
     console.log('[StreamingRouter /addStreaming] resultCode = ', resultCode);
     
@@ -47,11 +49,13 @@ router.get('/addStreaming', async (req, res, next) => {
 router.post('/addStreaming', async (req, res) => {
   try {
     const streamingTitle = req.body.streamingTitle;
-    const isRecord = req.body.isRecord;
-    const category = req.body.category;
+    const category = req.body.streamingCategory;
     const sessionId = req.cookies.NSESSIONID;
     
-    const result = await streamingService.addStreaming(streamingTitle, isRecord, category, sessionId);
+    console.log('[Streaming /addStreaming] streamingTitle = ', streamingTitle);
+    console.log('[Streaming /addStreaming] category = ', category);
+    console.log('[Streaming /addStreaming] sessionId = ', sessionId);
+    const result = await streamingService.addStreaming(streamingTitle, true, category, sessionId);
 
     if(result == 'success') {
       response = new Data('success', '');
@@ -59,6 +63,7 @@ router.post('/addStreaming', async (req, res) => {
       response = new Data('fail', '');
     }
     
+    response = new Data('success', '');
     res.json(JSON.stringify(response));
   } catch (error) {
     console.log('[StreamingRouter /addStreaming] error = ', error);
@@ -71,18 +76,21 @@ router.get('/getServiceUrl', async (req, res) => {
     const sessionId = req.cookies.NSESSIONID
     const serviceUrl = await streamingService.getServiceUrlAndThumbnail(sessionId);
 
+    console.log('[StreamingRouter /getServiceUrl] serviceUrl = ', serviceUrl);
+
     if(serviceUrl == 'fail') {
       response = new Data('fail', '');
       res.json(JSON.stringify(response));
       return;
     }
     
-    response = new Data('success', '');
-    res.json(JSON.stringify(response));
-
+    if(serviceUrl == 'success') {
+      response = new Data('success', '');
+      res.json(JSON.stringify(response));
+      return;
+    }
   } catch (error) {
     console.log('[StreamingRouter /getServiceUrl] error = ', error);
-
     response = new Data('fail', '');
     res.json(JSON.stringify(response));
   }
@@ -106,6 +114,9 @@ router.get('/getStreamingViewerPage', async (req, res) => {
   try {
     const streamingUserId = req.query.streamingUserId;
     const sessionId = req.cookies.NSESSIONID;
+
+    console.log('[StreamingRouter /getStreamingViewerPage] streamingUserId = ', streamingUserId);
+    console.log('[StreamingRouter /getStreamingViewerPage] sessionId = ', sessionId);
 
     let response
     if(sessionId) {
@@ -132,9 +143,11 @@ router.get('/getStreamingViewerPage', async (req, res) => {
 
 router.get('/getStreamingList', async (req, res) => {
   try {
-    const streamingList = await streamingService.getStreamingList();
-    
-    res.json(streamingList);
+    const searchCondition = req.query.searchCondition;
+    const searchKeyword = req.query.searchCondition;
+
+    const streamingList = await streamingService.getStreamingList(searchCondition, searchKeyword);
+    res.json(new Data('success', streamingList));
   } catch (error) {
     console.error('[StreamingRouter /getStreamingList] error = ', error);
     res.status(500).json({ error: 'Server Internal Error' });
