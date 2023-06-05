@@ -121,21 +121,24 @@ class UserDAO {
 
   async getAdminUserList(searchCondition, searchKeyword) {
     try {
-      connection.connection();
+      connection.connect();
 
-      const sql = 'SELECT u.USER_ID, u.PROFILE_PHOTO, u.USER_NICKNAME'
+      let sql = 'SELECT u.USER_ID, u.PROFILE_PHOTO, u.USER_NICKNAME'
                 + ', u.USER_NAME, u.DATE_BIRTH, u.EMAIL, u.PHONE, DATE_FORMAT(u.SIGN_DATE, "%Y-%m-%d / %H:%i") AS SIGN_DATE'
                 + ', u.ROLL, u.COIN, u.ACCUMULATED_VIEWERS, u.TOTAL_STREAMING_ACCUMULATED_TIME, u.ST_ROLL'
                 + ', (SELECT COUNT(*) FROM FAN WHERE USER_ID = u.USER_ID) AS FOLLOWER'
-                + 'FROM USER u';
+                + ' FROM USER u';
       const param = [];
 
       if(searchCondition == '0') {
         sql = sql + ` WHERE u.USER_NAME LIKE '%${searchKeyword}%'`;
-      }else {
+      }
+
+      if(searchCondition == '1'){
         sql = sql + ` WHERE u.USER_NICKNAME LIKE '%${searchKeyword}%'`;
       }
       
+      sql = sql + ' ORDER BY SIGN_DATE DESC';
       const response = await new Promise((resolve, reject) => {
         connection.query(sql, param, (error ,results) => {
           if(error) {
@@ -145,10 +148,18 @@ class UserDAO {
           }
         });
       });
-      
 
-    } catch (error) {
+      let result = [];
+      if(response && response.length > 0) {
+        for(const data of response) {
+          result.push({...data});
+        }
+      }
       
+      return result;
+    } catch (error) {
+      console.log('[UserDAO getAdminUserList] error = ', error);
+      return 'fail';
     }
   }
   

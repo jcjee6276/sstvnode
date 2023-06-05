@@ -40,8 +40,8 @@ class BanService{
     return result;
   }
 
-  async getStreamingRollBanList() {
-    const result = await banDAO.getStreamingRollBanList();
+  async getStreamingRollBanList(searchCondition, searchKeyword) {
+    const result = await banDAO.getStreamingRollBanList(searchCondition, searchKeyword);
 
     return result;
   }
@@ -95,9 +95,9 @@ class BanService{
     }
   }
 
-  async getStreamingBanList(userId) {
+  async getStreamingBanList(searchCondition, searchKeyword) {
     try {
-      const streamingBanList = await banDAO.getStreamingBanList(userId)
+      const streamingBanList = await banDAO.getStreamingBanList(searchCondition, searchKeyword)
       return streamingBanList;
     } catch (error) {
       console.log('[BanService getStreamingBanList] error = ', error);

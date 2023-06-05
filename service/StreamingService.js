@@ -211,7 +211,7 @@ class StreamingService {
 
   /* 
   1. userId나 streamingTitle로 Redis에서 검색
-  2. 검색조건은 시청자순
+  2. 검색조건은 회원 닉네임, 스트리밍 제목
   */
   async getStreamingList(searchCondition, searchKeyword) {
     try {
@@ -228,6 +228,52 @@ class StreamingService {
       console.log('[StreamingService getStreamingList] error = ', error);
     }
   }
+
+  /* 
+  1. userId나 streamingTitle로 Redis에서 검색
+  2. 검색조건은 회원 닉네임 : 0, 스트리밍 제목 : 1
+  */
+  async getAdminStreamingList(searchCondition, searchKeyword) {
+    try {
+      const keys = await Redis.client.keys('*_onStreaming');
+      let streamingList = []
+      
+      if(keys) {
+        for(const key of keys) {
+          const streaming = JSON.parse(await Redis.client.get(key));
+          streamingList.push(streaming);
+        }
+      }
+
+      if(searchCondition == '0' && searchKeyword) {
+        const streamingListByKeyword = [];
+
+        for(const streaming of streamingList) {
+          if(streaming.userNickname.includes(searchKeyword)) {
+            streamingListByKeyword.push(streaming);
+          }
+        }
+
+        streamingList = streamingListByKeyword;
+      }
+
+      if(searchCondition == '1' && searchKeyword) {
+        const streamingListByKeyword = [];
+
+        for(const streaming of streamingList) {
+          if(streaming.streamingTitle.includes(searchKeyword)) {
+            streamingListByKeyword.push(streaming);
+          }
+        }
+        streamingList = streamingListByKeyword;
+      }
+      
+      return streamingList;
+    } catch (error) {
+      console.log('[StreamingService getStreamingList] error = ', error);
+      return 'fail';
+    }
+  }
   
   async searchByKeyword(searchKeyword) {
     try {
@@ -238,11 +284,10 @@ class StreamingService {
       for(const key of keys) {
         const streaming = JSON.parse(await Redis.client.get(key));
 
-        if(streaming.userId.includes(searchKeyword) || streaming.streamingTitle.includes(searchKeyword)) {
+        if(streaming.userNickname.includes(searchKeyword) || streaming.streamingTitle.includes(searchKeyword)) {
           streamingList.push(streaming);
         }
       }
-
       return streamingList;
     } catch (error) {
       console.log('[StreamingService searchByKeyword] error = ', error);

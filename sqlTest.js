@@ -1,13 +1,8 @@
-const adDAO = new (require('./DAO/AdDAO'));
-
+const streamingService = new (require('./service/StreamingService'));
 
 const getAdList = async () => {
-  // const adList = await adDAO.getAdReqList('user1', null);
-  // const adList = await adDAO.getAdReqList(null, '0');
-  // const adList = await adDAO.getAdReqList('user9', 0);
-  const adList = await adDAO.getAdList();
-
-  console.log('adList = ', adList);
+  const streamingList = await streamingService.getAdminStreamingList();
+  console.log('streamingList = ', streamingList);
 }
 
 getAdList();

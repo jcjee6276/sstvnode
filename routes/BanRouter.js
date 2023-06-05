@@ -52,21 +52,38 @@ router.get('/getStreamingRollBan', async (req, res) => {
 });
 
 router.get('/getStreamingRollBanList', async (req, res) => {
-  const result = await banService.getStreamingRollBanList();
+  try {
+    const searchCondition = req.query.searchCondition;
+    const searchKeyword = req.query.searchKeyword;
+    console.log('[BanRouter /getStreamingRollBanList] searchCondition = ', searchCondition);
+    console.log('[BanRouter /getStreamingRollBanList] searchKeyword = ', searchKeyword);
 
-  let response;
-  if(result == 'fail') {
-    response = new Data('fail', '');
-  }else {
-    response = new Data('success', result);
+    const result = await banService.getStreamingRollBanList(searchCondition, searchKeyword);
+
+    let response;
+    if(result == 'fail') {
+      response = new Data('fail', '');
+    }else {
+      response = new Data('success', result);
+    }
+
+    res.json(response); 
+  } catch (error) {
+    console.log('[BanRouter /getStreamingRollBanList] error = ', error);
+    res.status(500).json({ error: 'Server Internal Error' });
   }
-
-  res.json(response);
 });
 
+/* 
+입력 body
+1. userId
+2. banType
+3. banContent
+*/
 router.post('/addStreamingBan', async (req, res) => {
   const ban = req.body;  
-  const result = await banService.addStreamingBan(ban);
+  console.log('[BanRouter /addStreamingBan] ban = ', ban);
+  // const result = await banService.addStreamingBan(ban);
 
   let response;
   if(result == 'fail') {
@@ -93,17 +110,23 @@ router.get('/getStreamingBan', async (req, res) => {
 });
 
 router.get('/getStreamingBanList', async (req, res) => {
-  const userId = req.query.userId;
-  console.log('[BanRouter /getStreamingBanList] userId = ', userId);
-  const result = await banService.getStreamingBanList(userId);
+  try {
+    const searchCondition = req.query.searchCondition;
+    const searchKeyword = req.query.searchKeyword;
 
-  let response;
-  if(result == 'fail') {
-    response = new Data('fail', '');
-  }else {
-    response = new Data('success', result);
+    const result = await banService.getStreamingBanList(searchCondition, searchKeyword);
+
+    let response;
+    if(result == 'fail') {
+      response = new Data('fail', '');
+    }else {
+      response = new Data('success', result);
+    }
+
+    res.json(response);
+  } catch (error) {
+    console.log('[BanRouter /getStreamingBanList] error = ', error);
+    res.status(500).json({ error: 'Server Internal Error' });
   }
-
-  res.json(response);
 });
 module.exports = router;

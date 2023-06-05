@@ -13,6 +13,7 @@ const adRouter = require('./routes/AdRouter');
 const donationRouter = require('./routes/DonationRouter');
 const reportRouter = require('./routes/ReportRouter');
 const banRouter = require('./routes/BanRouter');
+const userRouter = require('./routes/UserRouter');
 
 //api 요청에 사용할 key
 global.accessKey = 'z4Xcnb9Fi7MmuSeksVf4';
@@ -52,6 +53,7 @@ app.use('/ad', adRouter);
 app.use('/donation', donationRouter);
 app.use('/report', reportRouter);
 app.use('/ban', banRouter);
+app.use('/user', userRouter);
 
 
 // 에러 핸들러

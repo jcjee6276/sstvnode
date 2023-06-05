@@ -31,13 +31,27 @@ class BanDAO {
     }
   }
 
-  async getStreamingRollBanList() {
+  //0 : 회원 아이디, 1: 회원 닉네임
+  async getStreamingRollBanList(searchCondition, searchKeyword) {
     try {
       connection.connect();
       
-      const sql = 'SELECT * FROM STREAMING_ROLE_BAN'
+      let sql = 'SELECT B.STREAMING_ROLE_BAN_NO, B.USER_ID, B.BAN_TYPE, B.BAN_CONTENT'
+                  + ', DATE_FORMAT(B.BAN_START_DATE, "%Y-%m-%d / %H:%i") AS BAN_START_DATE'
+                  + ', DATE_FORMAT(B.BAN_END_DATE, "%Y-%m-%d / %H:%i") AS BAN_END_DATE, U.*'
+                  + ' FROM STREAMING_ROLE_BAN B, USER U'
+                  + ' WHERE B.USER_ID = U.USER_ID'
       const param = [];
 
+      if(searchCondition == '0' && searchKeyword) {
+        sql = sql + ` AND U.USER_ID LIKE '%${searchKeyword}%'`
+      }
+
+      if(searchCondition == '1' && searchKeyword) {
+        sql = sql + ` AND U.USER_NICKNAME LIKE '%${searchKeyword}%'`
+      }
+
+      sql = sql + ' ORDER BY BAN_START_DATE DESC'
       const result = await new Promise((resolve, rejcet) => {
         connection.query(sql, param, (error, results) => {
           if(error) {
@@ -49,7 +63,7 @@ class BanDAO {
       });
 
       let response = [];
-      if(result.length > 0) {
+      if(result && result.length > 0) {
         for(const data of result) {
           response.push({...data});
         }
@@ -121,20 +135,34 @@ class BanDAO {
           }
         });
       });
-
-      console.log('[BanDAO addStreamingBan] result = ', result);
       return result;
     } catch (error) {
       console.log('[BanDAO addStreamingBan] error = ', error);
     }
   }
 
-  async getStreamingBanList(userId) {
+  async getStreamingBanList(searchCondition, searchKeyword) {
     try {
       connection.connect();
 
-      const sql = 'SELECT * FROM STREAMING WHERE USER_ID = ? AND BAN_TYPE IS NOT NULL';
-      const param = [userId];
+      let sql = 'SELECT S.STREAMING_NO, S.USER_ID, U.USER_NICKNAME, U.USER_NAME, S.STREAMING_CATEGORY, S.STREAMING_TITLE'
+                  + ', DATE_FORMAT(S.STREAMING_START_TIME, "%Y-%m-%d / %H:%i") AS STREAMING_START_TIME, DATE_FORMAT(S.STREAMING_END_TIME, "%Y-%m-%d / %H:%i") AS STREAMING_END_TIME'
+                  + ', S.TOTAL_STREAMING_VIEWER, S.BAN_TYPE, S.BAN_CONTENT, DATE_FORMAT(S.BAN_DATE,"%Y-%m-%d / %H:%i") AS BAN_DATE'
+                  + ', (SELECT SUM(DONATION_AMOUNT) FROM DONATION WHERE STREAMING_NO = S.STREAMING_NO) AS DONATION_AMOUNT'
+                  + ' FROM STREAMING S, USER U, DONATION D WHERE S.USER_ID = U.USER_ID AND S.STREAMING_NO = D.STREAMING_NO AND S.BAN_TYPE IS NOT NULL';
+      
+      
+      const param = [];
+
+      if(searchCondition == '0' && searchKeyword) {
+        sql = sql + ` AND U.USER_NICKNAME LIKE '%${searchKeyword}%'`;
+      }
+
+      if(searchCondition == '1' && searchKeyword) {
+        sql = sql + ` AND S.STREAMING_TITLE LIKE '%${searchKeyword}%'`;
+      }
+
+      sql = sql + ' ORDER BY S.BAN_DATE DESC';
 
       const result = await new Promise((resolve, reject) => {
         connection.query(sql, param, (error, results) => {
@@ -147,7 +175,13 @@ class BanDAO {
         });  
       });
 
-      const response = {...result};
+      const response = [];
+      if(result && result.length > 0) {
+        for(const data of result) {
+          response.push({...data});
+        }
+      }
+
       return response;
     } catch (error) {
       console.log('[BanDAO getStreamingBanList] error = ', error);

@@ -18,12 +18,12 @@ const socketEventHandler = (io) => {
         socket.join(roomName);
         console.log('[joinRoom]');
       
-        // const{streamingViewer, totalStreamingViewer} = await updateViewer(roomName, data.userId);
+        const{streamingViewer, totalStreamingViewer} = await updateViewer(roomName, data.userId);
 
-        // io.to(roomName).emit('join_room', {
-        //   streamingViewer : streamingViewer,
-        //   totalStreamingViewer : totalStreamingViewer
-        // });
+        io.to(roomName).emit('join_room', {
+          streamingViewer : streamingViewer,
+          totalStreamingViewer : totalStreamingViewer
+        });
       } catch (error) {
         console.log('[socketHandler join_room] error = ', error);
       }
@@ -106,7 +106,7 @@ const socketEventHandler = (io) => {
 //스트리밍에 입장시 해당 스트리밍의 실시간 시청자수, 누적 시청자수 증가시킨 뒤 반환
 async function updateViewer(roomName, userId) {
   try {
-    let on_streaming = await Reids.client.get(roomName + '_onStreaming');
+    let on_streaming = await Redis.client.get(roomName + '_onStreaming');
 
     if(on_streaming) {
       on_streaming = JSON.parse(on_streaming);

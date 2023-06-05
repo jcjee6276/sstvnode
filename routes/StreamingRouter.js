@@ -148,6 +148,11 @@ router.get('/getStreamingViewerPage', async (req, res) => {
   }
 });
 
+/* 
+  searchCondition 0 : 시청자 높은순
+  searchCondition 1 : 시청자 낮은순
+  searchKeywork : 스트리밍 제목 or 회원 닉네임
+*/
 router.get('/getStreamingList', async (req, res) => {
   try {
     const searchCondition = req.query.searchCondition;
@@ -232,8 +237,30 @@ router.get('/finishRecord', async (req, res) => {
 
   } catch (error) {
     console.log('[StreamingRouter /finishStreaming] error = ', error);
+    res.status(500).json({ error: 'Server Internal Error' });
   }
   
+});
+
+router.get('/getAdminStreamingList', async (req, res) => {
+  try {
+    const searchKeyword = req.query.searchKeyword;
+    const searchCondition = req.query.searchCondition;
+
+    const result = await streamingService.getAdminStreamingList(searchCondition, searchKeyword);
+
+    let response;
+    if(result == 'fail') {
+      response = new Data('fail', '');
+    }else {
+      response = new Data('success', result);
+    }
+
+    res.json(response);
+  } catch (error) {
+    console.log('[StreamingRouter /getAdminStreamingList] error = ', error);
+    res.status(500).json({ error: 'Server Internal Error' });
+  }
 });
 
 module.exports = router;
