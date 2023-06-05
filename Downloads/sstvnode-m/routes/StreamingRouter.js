@@ -1,0 +1,241 @@
+var express = require('express');
+var router = express.Router();
+const StreamingService = require('../service/StreamingService');
+const streamingService = new StreamingService();
+var Data = require('../model/Data');
+const { DATE } = require('mysql/lib/protocol/constants/types');
+
+/* 
+
+  {result : success, data : 0} : 스트리밍 시작 가능
+  {result : fail, data : 1} : 로그인 필요
+  {result : fail, data : 2} : 이미 스트리밍중
+  {result : fail, data : 3} : 스트리밍 권한 정지
+*/
+router.get('/addStreaming', async (req, res, next) => {
+ console.log("try?");
+  try {
+    const sessionId = req.cookies.NSESSIONID;
+    console.log(sessionId);
+    const resultCode =  await streamingService.validateAddStreaming(sessionId);
+    console.log("sessions:"+sessionId)
+
+    switch (resultCode) {
+      case 0:
+        response = new Data('success', 0);
+        break;
+
+      case 1:
+        response = new Data('fail', 1);
+        break;
+
+      case 2:
+        response = new Data('fail', 2);
+        break;
+
+      case 3:
+        response = new Data('fail', 3);
+        break;
+    }
+
+    res.json(JSON.stringify(response));
+  } catch (error) {
+    console.log('[StremaingRouter /addStreaming] error = ', error);
+    res.status(500).json({ error: 'Server Internal Error' });
+  }
+});
+
+router.post('/addStreaming', async (req, res) => {
+  try {
+    const streamingTitle = req.body.streamingTitle;
+    const category = req.body.streamingCategory;
+    const sessionId = req.cookies.NSESSIONID;
+    
+    console.log('[Streaming /addStreaming] streamingTitle = ', streamingTitle);
+    console.log('[Streaming /addStreaming] category = ', category);
+    console.log('[Streaming /addStreaming] sessionId = ', sessionId);
+    const result = await streamingService.addStreaming(streamingTitle, true, category, sessionId);
+
+    if(result == 'success') {
+      response = new Data('success', '');
+    } else {
+      response = new Data('fail', '');
+    }
+    
+    response = new Data('success', '');
+    res.json(JSON.stringify(response));
+  } catch (error) {
+    console.log('[StreamingRouter /addStreaming] error = ', error);
+    res.status(500).json({ error: 'Server Internal Error' });
+  }
+});
+
+router.get('/getServiceUrl', async (req, res) => {
+  try {
+    const sessionId = req.cookies.NSESSIONID
+    const serviceUrl = await streamingService.getServiceUrlAndThumbnail(sessionId);
+
+    console.log('[StreamingRouter /getServiceUrl] serviceUrl = ', serviceUrl);
+
+    if(serviceUrl == 'fail') {
+      response = new Data('fail', '');
+      res.json(JSON.stringify(response));
+      return;
+    }
+    
+    if(serviceUrl == 'success') {
+      response = new Data('success', '');
+      res.json(JSON.stringify(response));
+      return;
+    }
+  } catch (error) {
+    console.log('[StreamingRouter /getServiceUrl] error = ', error);
+    response = new Data('fail', '');
+    res.json(JSON.stringify(response));
+  }
+});
+
+router.get('/getMyStreamingPage', async (req, res) => {
+  try {
+    const sessionId = req.cookies.NSESSIONID;
+    const _onStreaming =  await streamingService.getMyStreamingPage(sessionId);
+
+    resposne = new Data('success', _onStreaming, _onStreaming.serviceUrlWithOutAd);
+    res.json(resposne);
+  } catch (error) {
+    console.log('[Streaming Router /getStreaming] error = ', error);
+    res.status(500).json({ error: 'Server Internal Error' });
+  }
+});
+
+router.get('/getMyOnGoingStreamingPage', async (req, res) => {
+  try {
+    const sessionId = req.cookies.NSESSIONID;
+    console.log('[Streaming Router /getMyOnGoingStreamingPage] sessionId = ', sessionId);
+
+    const {streaming, serviceUrl} = await streamingService.getMyOnGoingStreamingPage(sessionId);
+
+    res.json(new Data('success', streaming ,serviceUrl));
+  } catch (error) {
+    console.log('[Streaming Router /getMyOnGoingStreamingPage] error = ', error);
+    res.status(500).json({ error: 'Server Internal Error' });
+  }
+})
+
+router.get('/getStreamingViewerPage', async (req, res) => {
+  try {
+    const streamingUserId = req.query.streamingUserId;
+    const sessionId = req.cookies.NSESSIONID;
+
+    let response
+    if(sessionId) {
+      const result = await streamingService.getStreamingViewerPage(sessionId, streamingUserId);
+
+      response = new Data('success', result.streaming, result.serviceUrl);
+      if(result == '1') {
+        response = new Data('fail', '1');
+      }
+      if(result == '2') {
+        response = new Data('fail', '2');
+      }
+    } else {
+      const result = await streamingService.nonUserGetStreamingViewerPage(streamingUserId);
+      response = new Data('success', result.streaming, result.serviceUrl);
+    }
+
+    res.json(response);
+  } catch (error) {
+    console.log('[Streaming Router /getStreamingViewerPage] error = ', error);
+    res.status(500).json({ error: 'Server Internal Error' });
+  }
+});
+
+router.get('/getStreamingList', async (req, res) => {
+  try {
+    const searchCondition = req.query.searchCondition;
+    const searchKeyword = req.query.searchCondition;
+
+    const streamingList = await streamingService.getStreamingList(searchCondition, searchKeyword);
+    res.json(new Data('success', streamingList));
+  } catch (error) {
+    console.error('[StreamingRouter /getStreamingList] error = ', error);
+    res.status(500).json({ error: 'Server Internal Error' });
+  }
+});
+
+router.get('/updateStreamingTitle', async (req, res) => {
+  try {
+    const sessionId = req.cookies.NSESSIONID;
+    const streamingTitle =  req.query.streamingTitle;
+    const result = await streamingService.updateStreamingTitle(sessionId, streamingTitle);
+
+    let response;
+    if(result == 'success') {
+      response = new Data('success', '');
+    } else {
+      response = new Data('fail','');
+    }
+    
+    res.json(response);
+  } catch (error) {
+    console.log('[StreamingRouter /updateStreamingtitle] error = ', error);
+    res.status(500).json({ error: 'Server Internal Error' });
+  }
+});
+
+router.get('/updateStreamingCategory', async (req, res) => {
+  try {
+    const sessionId = req.cookies.NSESSIONID;
+    const streamingCategory =  req.query.streamingCategory;
+    const result = await streamingService.updateStreamingCategory(sessionId, streamingCategory);
+
+    let response;
+    if(result == 'success') {
+      response = new Data('success', '');
+    } else {
+      response = new Data('fail','');
+    }
+    
+    res.json(response);
+  } catch (error) {
+    console.log('[StreamingRouter /updateStreamingCategory] error = ', error);
+    res.status(500).json({ error: 'Server Internal Error' });
+  }
+});
+
+router.get('/finishStreaming', async (req, res) => {
+  try {
+    const sessionId = req.cookies.NSESSIONID;
+    const result =  await streamingService.finishStreaming(sessionId);
+
+    let response;
+    if(result != 'fail') {
+      response = new Data('success', result);
+      streamingService.delStreaming(sessionId);
+      
+      res.json(response);
+      return;
+    }
+
+    response = new Data('fail', '');
+    res.json(response);
+    return;
+  } catch (error) {
+    console.log('[StreamingRouter /removeStreaming] error = ', error);
+    res.status(500).json({ error: 'Server Internal Error' });
+  }
+});
+
+router.get('/finishRecord', async (req, res) => {
+  try {
+    const streamingUserId = req.query.streamingUserId;
+    const result = await streamingService.finishRecord(streamingUserId);
+    console.log('[StreamingRouter /finishRecord] result = ', result);  
+
+  } catch (error) {
+    console.log('[StreamingRouter /finishStreaming] error = ', error);
+  }
+  
+});
+
+module.exports = router;
