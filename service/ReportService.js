@@ -23,8 +23,8 @@ class ReportService{
     return report
   }
 
-  async getReportList() {
-    const reportList = await reportDAO.getReportList();
+  async getReportList(searchUserType, searchKeyword) {
+    const reportList = await reportDAO.getReportList(searchUserType, searchKeyword);
     return reportList;
   }
 

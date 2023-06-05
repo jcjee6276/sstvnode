@@ -150,6 +150,24 @@ class StreamingService {
     }
   }
 
+  async getMyOnGoingStreamingPage(sessionId) {
+    try {
+      const user = await Redis.client.get(sessionId + '_user');
+
+      if(user) {
+        const userId = JSON.parse(user).userId;
+        const streaming = JSON.parse(await Redis.client.get(userId + '_onStreaming'));
+        const serviceUrl = streaming.serviceUrlWithOutAd;
+        
+        return {streaming, serviceUrl};
+      }else {
+        return 'fail';
+      }
+    } catch (error) {
+      console.log('[StreamingService getMyOnGoingStreamingPage] error = ', error);
+    }
+  }
+
   async getStreamingViewerPage(sessionId, streamingUserId) {
     try {
       const isLogin = await this.isLogin(sessionId);
@@ -489,13 +507,14 @@ class StreamingService {
   createStreamingObject(user, streamingWithAd, streamingWithOutAd, serviceUrlWithAd, serviceUrlWithOutAd, thumnailUrlWithAd, thumnailUrlWithOutAd) {
     try {
       const userId = user.userId;
+      const userNickname = user.userNickname;
       const blackList = user.blackList;
       const streamingObjectWithAd = JSON.parse(streamingWithAd);
       const streamingObjectWithOutAd = JSON.parse(streamingWithOutAd);
         
       const _onStreaming = {
         'userId' : userId,
-  
+        'userNickname' : userNickname,
         'channelIdWithAd' : streamingObjectWithAd.content.channelId,
         'channelIdWithOutAd' : streamingObjectWithOutAd.content.channelId,
   
@@ -558,7 +577,6 @@ class StreamingService {
     if(user) {
       const userId = JSON.parse(user).userId;
       const ticketList = await userDAO.getUserTicket(userId);
-      console.log('[StreamingService isHavingTicket] ticketList = ', ticketList);
 
       if(ticketList.length > 0) {
         flag = true;

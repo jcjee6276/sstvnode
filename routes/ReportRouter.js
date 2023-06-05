@@ -38,29 +38,42 @@ router.get('/getReport', async (req, res) => {
 });
 
 router.get('/getReportList', async (req, res) => {
-  const result = await reportService.getReportList();
-  
-  let response;
-  if(result == 'fail') {
-    response = new Data('fail','');
-  }else {
-    response = new Data('success',result);
-  }
+  try {
+    const searchUserType = req.query.searchUserType;
+    const searchKeyword = req.query.searchKeyword;
 
-  res.json(response);
+    const result = await reportService.getReportList(searchUserType, searchKeyword);
+
+    let response;
+    if(result == 'fail') {
+      response = new Data('fail','');
+    }else {
+      response = new Data('success',result);
+    }
+
+    res.json(response);
+  } catch (error) {
+    console.log('[ReportRouter getReportList] error = ', error);
+    res.json(new Data('fail',''));
+  }
 });
 
 router.get('/removeReport', async (req, res) => {
-  const reportNo = req.query.reportNo
-  const result = await reportService.removeReport(reportNo);
+  try {
+    const reportNo = req.query.reportNo
+    const result = await reportService.removeReport(reportNo);
   
-  let response;
-  if(result == 'fail') {
+    let response;
+    if(result == 'fail') {
+      response = new Data('fail','');
+    }else {
+      response = new Data('success','');
+    }
+    res.json(response);
+  } catch (error) {
+    console.log('[ReportRouter /removeReport] error = ', error);
     response = new Data('fail','');
-  }else {
-    response = new Data('success','');
   }
-  res.json(response);
 });
 
 module.exports = router;

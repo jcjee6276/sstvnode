@@ -16,11 +16,8 @@ const { DATE } = require('mysql/lib/protocol/constants/types');
 router.get('/addStreaming', async (req, res, next) => {
   try {
     const sessionId = req.cookies.NSESSIONID;
-    console.log('[StreamingRouter /addStreaming] sessionId = ', sessionId);
-
     const resultCode =  await streamingService.validateAddStreaming(sessionId);
-    console.log('[StreamingRouter /addStreaming] resultCode = ', resultCode);
-    
+
     switch (resultCode) {
       case 0:
         response = new Data('success', 0);
@@ -109,14 +106,24 @@ router.get('/getMyStreamingPage', async (req, res) => {
   }
 });
 
+router.get('/getMyOnGoingStreamingPage', async (req, res) => {
+  try {
+    const sessionId = req.cookies.NSESSIONID;
+    console.log('[Streaming Router /getMyOnGoingStreamingPage] sessionId = ', sessionId);
+
+    const {streaming, serviceUrl} = await streamingService.getMyOnGoingStreamingPage(sessionId);
+
+    res.json(new Data('success', streaming ,serviceUrl));
+  } catch (error) {
+    console.log('[Streaming Router /getMyOnGoingStreamingPage] error = ', error);
+    res.status(500).json({ error: 'Server Internal Error' });
+  }
+})
 
 router.get('/getStreamingViewerPage', async (req, res) => {
   try {
     const streamingUserId = req.query.streamingUserId;
     const sessionId = req.cookies.NSESSIONID;
-
-    console.log('[StreamingRouter /getStreamingViewerPage] streamingUserId = ', streamingUserId);
-    console.log('[StreamingRouter /getStreamingViewerPage] sessionId = ', sessionId);
 
     let response
     if(sessionId) {

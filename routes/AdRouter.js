@@ -7,6 +7,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 const adService = new (require('../service/AdService'))();
 const adRestDAO = new (require('../DAO/AdRestDAO'))();
 const Data = require('../model/Data');
+const AdDAO = require('../DAO/AdDAO');
 
 
 router.post('/addAdReq', upload.single('file'), (req, res) => {
@@ -33,7 +34,10 @@ router.get('/updateProcessCode', async (req, res) => {
     const processCode = req.query.processCode;
     const adReqNo = req.query.adReqNo;
     const denyCode = req.query.denyCode;
-
+    
+    console.log('[AdRouter /updateProcessCode] processCode = ', processCode);
+    console.log('[AdRouter /updateProcessCode] adReqNo = ', adReqNo);
+    console.log('[AdRouter /updateProcessCode] denyCode = ', denyCode);
     const result = await adService.updateProcessCode(adReqNo, processCode, denyCode);
 
     let response;
@@ -52,8 +56,11 @@ router.get('/updateProcessCode', async (req, res) => {
 
 router.get('/getAdReqList', async (req, res) => {
   try {
-    const list = await adService.getAdReqList();
-    res.json(list);
+    const searchKeyword = req.query.searchKeyword;
+    const processCode = req.query.processCode;
+
+    const list = await adService.getAdReqList(searchKeyword, processCode);
+    res.json(new Data('success', list));
   } catch (error) {
     console.log('[AdRouter /getAdReqList] error = ', error);
     res.status(500).json({ error: 'Server Internal Error' });
@@ -79,5 +86,23 @@ router.get('/removeAllLiveCurtain',async (req, res) => {
     res.status(500).json({ error: 'Server Internal Error' });
   }
 });
+
+router.get('/getAdList', async (req, res) => {
+  try {
+    const result = await adService.getAdList();
+
+    let response;
+    if(result != 'fail') {
+      response = new Data('success', result);
+    }else {
+      response = new Data('fail', '');
+    }
+
+    return res.json(response);
+  } catch (error) {
+    console.log('[AdRouter /getAdList] error = ', error);
+    res.status(500).json({ error: 'Server Internal Error' });
+  }
+}); 
   
 module.exports = router;

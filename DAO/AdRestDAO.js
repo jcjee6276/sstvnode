@@ -2,16 +2,14 @@ const request = require('request');
 var fs = require('fs');
 const { v4 } = require('uuid');
 const AWS = require('aws-sdk');
-const { error, timeStamp } = require('console');
 const CryptoJS = require('crypto-js');
-const { response } = require('express');
 const endpoint = new AWS.Endpoint('https://kr.object.ncloudstorage.com');
 const region = 'kr-standard';
-const mediaPath = 'public/donation/';
+const bucketName = 'advertise';
 
 
 
-class DonationDAO {
+class adRestDAO {
   async uploadFileToObjectStorage(file, fileName) {  
     try {
       const S3 = new AWS.S3({
@@ -22,8 +20,6 @@ class DonationDAO {
           secretAccessKey : global.secretKey
         }
       });
-  
-      const bucketName = 'donation';
   
       await S3.putObject({
         Bucket : bucketName,
@@ -46,8 +42,6 @@ class DonationDAO {
           secretAccessKey : global.secretKey
         }
       });
-  
-      const bucketName = 'donation';
   
       await S3.deleteObject({
         Bucket : bucketName,
@@ -81,7 +75,7 @@ class DonationDAO {
         body : JSON.stringify({
           content : [
             {
-              'bucketName' : "donation",
+              'bucketName' : bucketName,
               'filePath' : '/' + fileName,
             },
           ]
@@ -145,11 +139,11 @@ class DonationDAO {
         const errorCode = bodyObject.errorCode;
 
         if(errorCode) {
-          console.log('[DonationDAO startLiveCurtain] errorCode = ', bodyObject);
+          console.log('[AdRestDAO startLiveCurtain] errorCode = ', bodyObject);
           return;
         }
         
-        console.log('[DonationDAO startLiveCurtain] bodyObject = ', bodyObject);
+        console.log('[AdRestDAO startLiveCurtain] bodyObject = ', bodyObject);
       });
     } catch (error) {
       console.log('[AdRestDAO startLiveCurtain] error = ', error);
@@ -179,9 +173,9 @@ class DonationDAO {
         const bodyObject = JSON.parse(body);
         const errorCode = bodyObject.errorCode;  
 
-        console.log('[DonationDAO getLiveCurtainList] bodyObject = ', bodyObject);
+        console.log('[AdRestDAO getLiveCurtainList] bodyObject = ', bodyObject);
         if(errorCode) {
-          console.log('[DonationDAO getLiveCurtainList] errorCode = ', bodyObject);
+          console.log('[AdRestDAO getLiveCurtainList] errorCode = ', bodyObject);
           return;
         }
 
@@ -213,9 +207,9 @@ class DonationDAO {
         const bodyObject = JSON.parse(body);
         const errorCode = bodyObject.errorCode;  
 
-        console.log('[DonationDAO removeLiveCurtain] bodyObject = ', bodyObject);
+        console.log('[AdRestDAO removeLiveCurtain] bodyObject = ', bodyObject);
         if(errorCode) {
-          console.log('[DonationDAO removeLiveCurtain] errorCode = ', bodyObject);
+          console.log('[AdRestDAO removeLiveCurtain] errorCode = ', bodyObject);
           return;
         }
       });
@@ -294,4 +288,4 @@ class DonationDAO {
   }
 }
 
-module.exports = DonationDAO;
+module.exports = adRestDAO;

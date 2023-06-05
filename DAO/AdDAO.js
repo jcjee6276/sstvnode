@@ -53,6 +53,7 @@ class AdDAO {
       }
       
       
+      console.log('[AdDAO updateProcessCode] sql = ', sql);
       const result = new Promise((resolve, rejcet) => {
         connection.query(sql, param, (error, result) => {
           if(error) {
@@ -132,13 +133,29 @@ class AdDAO {
   }
 
   //회원들이 신청한 광고 신청목록 가져오기
-  async getAdReqList() {
+  async getAdReqList(userId, processCode) {
     try {
       connection.connect();
 
-      const sql = 'SELECT * FROM AD_REQ'
+
+      let sql = 'SELECT AD_REQ_NO, USER_ID, AD_NAME,' 
+                + ' DATE_FORMAT(AD_REQ_DATE, "%Y-%m-%d / %H:%i") AS AD_REQ_DATE, PROCESS_CODE, PAYMENT_COIN'
+                + ' FROM AD_REQ ';
       const param = [];
       let response = [];
+
+      if(userId) {
+        sql = sql + ` WHERE USER_ID LIKE '%${userId}%'`;
+      }
+
+      if(processCode) {
+        if(userId) {
+          sql = sql + ' AND PROCESS_CODE = ?';
+        }else {
+          sql = sql + ' WHERE PROCESS_CODE = ?';
+        }
+        param.push(processCode);
+      }
 
       const results = await new Promise((resolve, reject) => {
         connection.query(sql, param, (error, results) => {
@@ -169,8 +186,10 @@ class AdDAO {
   async getAdList() {
     try {
       connection.connect();
-
-      const sql = 'SELECT * FROM AD_REQ WHERE PROCESS_CODE = 1 AND AD_PLAYS_COUNT < 10 ORDER BY AD_REQ_DATE DESC'
+      
+      const sql = 'SELECT AD_REQ_NO, USER_ID, AD_NAME, DATE_FORMAT(AD_REQ_DATE, "%Y-%m-%d / %H:%i") AS AD_REQ_DATE, PROCESS_CODE, ' 
+                  + ' PAYMENT_COIN, DENY_CODE, AD_PLAYS_COUNT, AD_TOTAL_VIEWERS, AD_STREAMING_PLAYS_COUNT FROM AD_REQ'  
+                  + ' WHERE PROCESS_CODE = 1 AND AD_PLAYS_COUNT < 10 ORDER BY AD_REQ_DATE DESC'
       const param = [];
       const response = [];
 
@@ -178,7 +197,7 @@ class AdDAO {
         connection.query(sql, param,(error ,results) => {
           if(error) {
             console.log('[AdDAO getAdList] error = ', error);
-            reject(error);
+            resolve('fail');
           } else {
             resolve(results);
           }

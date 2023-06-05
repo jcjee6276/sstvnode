@@ -1,8 +1,15 @@
-const streamingService = new (require('./service/StreamingService'))();
+const adDAO = new (require('./DAO/AdDAO'));
 
-const redisgetStreamingList = async () => {
-  const streamingList = await streamingService.searchByKeyword('');
-  console.log('streamingList = ', streamingList);
+
+const getAdList = async () => {
+  // const adList = await adDAO.getAdReqList('user1', null);
+  // const adList = await adDAO.getAdReqList(null, '0');
+  // const adList = await adDAO.getAdReqList('user9', 0);
+  const adList = await adDAO.getAdList();
+
+  console.log('adList = ', adList);
 }
 
-redisgetStreamingList();
+getAdList();
+
+

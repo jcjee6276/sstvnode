@@ -13,19 +13,25 @@ class AdService {
   2. 코인을 10000이상 보유해야한다.
   */
   async addAdReq(sessionId, file, fileName) {
-    if(this.isLogin(sessionId) && this.validateCoin(sessionId)) {
-      const user = await Redis.client.get(sessionId + '_user');
-      
-      if(user) {
-        const userId = (JSON.parse(user)).userId;
-        const userCoin = await userDAO.getUserCoin(userId);
-        
-        userDAO.updateUserCoin(userCoin - 10000);
-        userDAO.addUserCoinHistory(userId, -10000, 3);
+    try {
+      if(this.isLogin(sessionId) && this.validateCoin(sessionId)) {
+        const user = await Redis.client.get(sessionId + '_user');
 
-        adRestDAO.uploadFileToObjectStorage(file, fileName);
-        adDAO.addAdReq(userId, fileName, 10000);
+        if(user) {
+          const userId = JSON.parse(user).userId;
+          const userCoin = await userDAO.getUserCoin(userId);
+          
+          userDAO.updateUserCoin((userCoin - 10000), userId);
+          userDAO.addUserCoinHistory(userId, -10000, 3);
+  
+          adRestDAO.uploadFileToObjectStorage(file, fileName);
+          adDAO.addAdReq(userId, fileName, 10000);
+        }
+      }else {
+        return 'fail';
       }
+    } catch (error) {
+      console.log('[AdService addAdReq] error = ', error);
     }
   }
 
@@ -50,9 +56,8 @@ class AdService {
     }
   }
 
-  //2주차에 searchCondition, searchKeyword 추가
-  async getAdReqList() {
-    const list = await adDAO.getAdReqList();
+  async getAdReqList(userId, processCode) {
+    const list = await adDAO.getAdReqList(userId, processCode);
     return list;
   }
 
@@ -111,34 +116,45 @@ class AdService {
       console.log('[AdService playAd] error = ', error);
     }
   }
+
+  async getAdList() {
+    try {
+      const result = adDAO.getAdList();
+
+      return result;
+    } catch (error) {
+      console.log('[AdService getAdList] error = ', error);
+      return 'fail';
+    }
+  }
   
   async delay (ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
   
   //donation영역
-  async addDonation(sessionId, streamingUserId, donationAmout, donationContent) {
-    const channelWithId = JSON.parse(await Redis.client.get(streamingUserId + '_onStreaming')).channelIdWithAd;
-    const channelWithOutId = JSON.parse(await Redis.client.get(streamingUserId + '_onStreaming')).channelIdWithOutAd;
+  // async addDonation(sessionId, streamingUserId, donationAmout, donationContent) {
+  //   const channelWithId = JSON.parse(await Redis.client.get(streamingUserId + '_onStreaming')).channelIdWithAd;
+  //   const channelWithOutId = JSON.parse(await Redis.client.get(streamingUserId + '_onStreaming')).channelIdWithOutAd;
 
-    const uuid = v4();
-    const imgFileName = await adRestDAO.textToImg(donationContent, uuid);
-    // const mp3FileName = await adRestDAO.textToMp3(donationContent, uuid);
+  //   const uuid = v4();
+  //   const imgFileName = await adRestDAO.textToImg(donationContent, uuid);
+  //   // const mp3FileName = await adRestDAO.textToMp3(donationContent, uuid);
 
-    // console.log('imgFileName = ', imgFileName);
-    // console.log('mp3FileName = ', mp3FileName);
+  //   // console.log('imgFileName = ', imgFileName);
+  //   // console.log('mp3FileName = ', mp3FileName);
 
-    await adRestDAO.uploadFileToObjectStorage(imgFileName);
-    // await adRestDAO.uploadFileToObjectStorage(mp3FileName);
+  //   await adRestDAO.uploadFileToObjectStorage(imgFileName);
+  //   // await adRestDAO.uploadFileToObjectStorage(mp3FileName);
 
-    // const curtainId = await adRestDAO.createLiveCurtain(imgFileName, 'null');
-    const curtainId = 93;
-    // console.log('[AdService addDonation] curtainId = ', curtainId);
+  //   // const curtainId = await adRestDAO.createLiveCurtain(imgFileName, 'null');
+  //   const curtainId = 93;
+  //   // console.log('[AdService addDonation] curtainId = ', curtainId);
 
 
-    this.startLiveCurtain(channelWithId, curtainId);
-    this.startLiveCurtain(channelWithOutId, curtainId);
-  }
+  //   this.startLiveCurtain(channelWithId, curtainId);
+  //   this.startLiveCurtain(channelWithOutId, curtainId);
+  // }
 
   async getLiveCurtainList() {
     return await adRestDAO.getLiveCurtainList();
