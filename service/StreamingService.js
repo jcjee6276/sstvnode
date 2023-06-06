@@ -351,12 +351,10 @@ class StreamingService {
   //관리자인지 스트리머회원인지는 라우터에서 판단하기
   async finishStreaming(sessionId, streamingUserId) {
     try {
-      const isAdmin = this.isAdmin(sessionId);
-      const isStreamingOwner = this.isStreamingOwner(sessionId);
-
+      const isStreamingOwner = this.isStreamingOwner(sessionId, streamingUserId);
       let streaming = await Redis.client.get(streamingUserId + '_onStreaming');
   
-      if(streaming) {
+      if(streaming && isStreamingOwner) {
         streaming = JSON.parse(streaming);
         const reocordUrl = await this.finishRecord(streaming);
         console.log('[StreamingService finishStreaming] recordUrl = ', reocordUrl);
@@ -369,6 +367,8 @@ class StreamingService {
         console.log('[StremaingService finishStreaming] recordUrl = ', reocordUrl);
         
         streamingDAO.finishStreaming(streaming);
+        this.delStreaming(streamingUserId);
+
         return streaming;
       }else {
         console.log('[StreamingService finishStreaming] streaming not exist');
@@ -457,9 +457,10 @@ class StreamingService {
   }
 
   async isStreamingOwner(sessionId, streamingUserId) {
+    let result = false;
+
     const user =  await Redis.client.get(sessionId + '_user')
     
-    let result = false;
     if(user) {
       const userId = JSON.parse(user).userId;
       if(userId == streamingUserId) {

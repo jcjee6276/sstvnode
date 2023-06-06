@@ -213,18 +213,14 @@ router.get('/finishStreaming', async (req, res) => {
     
     const result =  await streamingService.finishStreaming(sessionId, streamingUserId);
 
-    let response;
-    if(result != 'fail') {
-      response = new Data('success', result);
-      streamingService.delStreaming(sessionId);
-      
-      res.json(response);
-      return;
-    }
-
-    response = new Data('fail', '');
-    res.json(response);
-    return;
+    // let response;
+    // if(result != 'fail') {
+    //   response = new Data('success', result);
+    //   streamingService.delStreaming(sessionId);
+    // }else {
+    //   response = new Data('fail', '');
+    // }
+    res.json('response');
   } catch (error) {
     console.log('[StreamingRouter /removeStreaming] error = ', error);
     res.status(500).json({ error: 'Server Internal Error' });

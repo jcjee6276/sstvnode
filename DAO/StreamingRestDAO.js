@@ -16,7 +16,7 @@ class StreamingDAO {
     let record;
     let immediateOnAir;
   
-    if(isRecord == 'true') {
+    if(isRecord == true) {
       record = {
         "type" : "AUTO_UPLOAD",
         "format" : "MP4",
