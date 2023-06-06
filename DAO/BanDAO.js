@@ -31,6 +31,36 @@ class BanDAO {
     }
   }
 
+  async removeStreamingRollBan(streamingRollBanNo, userId) {
+    try {
+      connection.connect();
+
+      if(streamingRollBanNo && userId) {
+        const removeSQL = `DELETE FROM STREAMING_ROLE_BAN WHERE STREAMING_ROLE_BAN_NO = ${streamingRollBanNo}; `;  
+        const updateSQL = ` UPDATE USER SET ST_ROLL = 0 WHERE USER_ID = '${userId}'`;
+        const param = [];
+  
+        const result = await new Promise((resolve, rejcet) => {
+          connection.query((removeSQL + updateSQL), param, (error, results) => {
+            if(error) {
+              console.log('[BanDAO removeStreamingRollBan] error = ', error);
+              resolve('fail')
+            }else {
+              resolve('success');
+            }
+          });
+        });
+
+        return result;
+      }else {
+        return 'fail';
+      }
+
+    } catch (error) {
+      console.log('[BanDAO removeStreamingRollBan] error = ', error);
+    }
+  }
+
   //0 : 회원 아이디, 1: 회원 닉네임
   async getStreamingRollBanList(searchCondition, searchKeyword) {
     try {

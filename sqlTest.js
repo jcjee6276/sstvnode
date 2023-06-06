@@ -1,8 +1,8 @@
-const streamingService = new (require('./service/StreamingService'));
+const banDAO = new(require('./DAO/BanDAO'));
 
 const getAdList = async () => {
-  const streamingList = await streamingService.getAdminStreamingList();
-  console.log('streamingList = ', streamingList);
+  
+  banDAO.removeStreamingRollBan(1, 'user1');
 }
 
 getAdList();

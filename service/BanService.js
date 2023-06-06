@@ -3,6 +3,7 @@ const userDAO = new (require('../DAO/UserDAO'))();
 const streamingRestDAO = new (require('../DAO/StreamingRestDAO'))();
 const streamingDAO = new (require('../DAO/StreamingDAO'))();
 const Redis = require('../model/Redis');
+const streamingService = new (require('./StreamingService'))();
 
 
 
@@ -21,8 +22,8 @@ class BanService{
     return result;
   }
 
-  async removeStreamingRollBan(userId) {
-    const result = await userDAO.updateStRoll(userId, 0);
+  async removeStreamingRollBan(streamingRollBanNo, userId) {
+    const result = await banDAO.removeStreamingRollBan(streamingRollBanNo, userId);
 
     let response;
     if(result == 'success') {
@@ -70,6 +71,8 @@ class BanService{
 
         removeStreamingResultWithAd = await streamingRestDAO.removeStreaming(channelIdWithAd);
         removeStreamingResultWithOutAd = await streamingRestDAO.removeStreaming(channelIdWithOutAd);
+
+        streamingService.delStreaming(ban.userId);
       }
 
       let response;
@@ -103,6 +106,20 @@ class BanService{
       console.log('[BanService getStreamingBanList] error = ', error);
       return 'fail';
     }
+  }
+
+  async isAdmin(sessionId) {
+    const user = await Redis.client.get(sessionId + '_user')
+
+    let result = false;
+    if(user) {
+      const roll = JSON.parse(user).roll;
+
+      if(roll == 'admin') {
+        result = true;
+      }
+    }
+    return result;
   }
 }
 

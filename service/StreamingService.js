@@ -348,85 +348,77 @@ class StreamingService {
     return 'fail';
   }
 
-  async finishStreaming(sessionId) {
+  //관리자인지 스트리머회원인지는 라우터에서 판단하기
+  async finishStreaming(sessionId, streamingUserId) {
     try {
-      const isStreamingOwner = await this.isStreamingOwner(sessionId);
+      const isAdmin = this.isAdmin(sessionId);
+      const isStreamingOwner = this.isStreamingOwner(sessionId);
+
+      let streaming = await Redis.client.get(streamingUserId + '_onStreaming');
   
-      if(isStreamingOwner) {
-        const reocordUrl = await this.finishRecord(sessionId);
+      if(streaming) {
+        streaming = JSON.parse(streaming);
+        const reocordUrl = await this.finishRecord(streaming);
         console.log('[StreamingService finishStreaming] recordUrl = ', reocordUrl);
 
-        await this.stopStreaming(sessionId);
-        await this.removeStreaming(sessionId);
-        await this.removeCDN(sessionId);
-
-        const userId = JSON.parse((await Redis.client.get(sessionId + '_user'))).userId;
-        const streaming = JSON.parse((await Redis.client.get(userId + '_onStreaming')));
+        await this.stopStreaming(streaming);
+        await this.removeStreaming(streaming);
+        await this.removeCDN(streaming);
         
         streaming.recordUrl = reocordUrl;
         console.log('[StremaingService finishStreaming] recordUrl = ', reocordUrl);
         
         streamingDAO.finishStreaming(streaming);
         return streaming;
+      }else {
+        console.log('[StreamingService finishStreaming] streaming not exist');
+        return 'fail';
       }
-
-      return 'fail';
     } catch (error) {
       console.log('[StreamingService finishStreaming] error = ', error);
+      return 'fail';
     }
   }
 
-  async finishRecord(sessionId) {
+  async finishRecord(streaming) {
     try {
-      const user = await Redis.client.get(sessionId + '_user');
+      const result = await streamingRestDAO.finishRecord(streaming.channelIdWithOutAd);
 
-      if(user) {
-        const userId = JSON.parse(user).userId;
-        const streaming = JSON.parse(await Redis.client.get(userId + '_onStreaming'));
+      if(result.content) {
+        const recordList = result.content.recordList;
+        
+        const map = new Map(Object.entries(recordList));
+        const recordUrl = map.values().next().value;
 
-        const result = await streamingRestDAO.finishRecord(streaming.channelIdWithOutAd);
-
-        if(result.content) {
-          const recordList = result.content.recordList;
-          
-          const map = new Map(Object.entries(recordList));
-          const recordUrl = map.values().next().value;
-
-          console.log('[StreamingService finishRecord] recordUrl = ', recordUrl.fileName);
-          return recordUrl.fileName;
-        }
+        console.log('[StreamingService finishRecord] recordUrl = ', recordUrl.fileName);
+        return recordUrl.fileName;
       }
-      return 'fail';
     } catch (error) {
       console.log('[StreamingService finishStreaming] error = ', error);
+      return 'fail';
     }
   }
 
-  async stopStreaming(sessionId) {
+  async stopStreaming(streaming) {
     try {
-      const user = await Redis.client.get(sessionId + '_user');
+      const channelIdWithAd = streaming.channelIdWithAd;
+      const channelIdWithOutAd = streaming.channelIdWithOutAd;
 
-      if(user) {
-        const userId = JSON.parse(user).userId;
-        const streaming = await Redis.client.get(userId + '_onStreaming');
-
-        if(streaming) {
-          const channelIdWithAd = JSON.parse(streaming).channelIdWithAd;
-          const channelIdWithOutAd = JSON.parse(streaming).channelIdWithOutAd;
-
-          await streamingRestDAO.stopStreaming(channelIdWithAd);
-          await streamingRestDAO.stopStreaming(channelIdWithOutAd);
-        }
-      }
+      await streamingRestDAO.stopStreaming(channelIdWithAd);
+      await streamingRestDAO.stopStreaming(channelIdWithOutAd);
+      return 'success';
     } catch (error) {
       console.log('[StreamingService stopStreaming] error = ', error);
+      return 'fail';
     }
   }
 
-  async delStreaming(sessionId) {
-    const userId = JSON.parse((await Redis.client.get(sessionId + '_user'))).userId;
-    
-    await Redis.client.del(userId + '_onStreaming');
+  delStreaming(userId) {
+    try {
+      Redis.client.del(userId + '_onStreaming');
+    } catch (error) {
+      console.log('[StreamingService delStreaming] error = ', error);
+    }
   }
   
   /* 
@@ -464,32 +456,31 @@ class StreamingService {
     return flag;
   }
 
-  async isStreamingOwner(sessionId) {
+  async isStreamingOwner(sessionId, streamingUserId) {
     const user =  await Redis.client.get(sessionId + '_user')
     
+    let result = false;
     if(user) {
       const userId = JSON.parse(user).userId;
-      if(userId != null && userId != undefined) {
-        const streaming = Redis.client.get(userId + '_onStreaming');
-  
-        if(streaming != null && streaming != undefined) {
-          return streaming;
-        }
+      if(userId == streamingUserId) {
+        result =  true;
       }
     }    
-    return false;
+    return result;
   }
 
   async isAdmin(sessionId) {
-    const roll = JSON.parse(await Redis.client.get(sessionId + 'user')).roll;
-    console.log('[StreamingService isAdmin] roll = ', roll);
-    console.log('[StreamingService isAdmin] typeof roll = ', typeof roll);
+    const user = await Redis.client.get(sessionId + 'user')
 
-    if(roll == 'admin') {
-      return true;
+    let result = false;
+    if(user) {
+      const roll = JSON.parse(user).roll;
+
+      if(roll == 'admin') {
+        result = true;
+      }
     }
-
-    return false;
+    return result;
   }
   
   async validateUserStRole(sessionId) {
@@ -504,35 +495,37 @@ class StreamingService {
     return stRoll;
   }
 
-  async removeStreaming(sessionId) {
-    const userId = JSON.parse((await Redis.client.get(sessionId + '_user'))).userId;
-  
-    const channelIdWithAd = JSON.parse((await Redis.client.get(userId + '_onStreaming'))).channelIdWithAd;
-    const channelIdWithOutAd = JSON.parse((await Redis.client.get(userId + '_onStreaming'))).channelIdWithOutAd;
-    
-    await streamingRestDAO.removeStreaming(channelIdWithAd);
-    await streamingRestDAO.removeStreaming(channelIdWithOutAd);
+  async removeStreaming(streaming) {  
+    try {
+      const channelIdWithAd = streaming.channelIdWithAd;
+      const channelIdWithOutAd = streaming.channelIdWithOutAd;
+      
+      await streamingRestDAO.removeStreaming(channelIdWithAd);
+      await streamingRestDAO.removeStreaming(channelIdWithOutAd);
+
+      return 'success';
+    } catch (error) {
+      console.log('[StreamingService removeStreaming] error = ', error);
+      return 'fail';
+    }
   }
 
-  async removeCDN(sessionId) {
+  async removeCDN(streaming) {
     try {
-      const user = await Redis.client.get(sessionId + '_user');
-
-      if(user) {
-        const userId = JSON.parse(user).userId;
-
-        const instanceNoWithAd = JSON.parse((await Redis.client.get(userId + '_onStreaming'))).instanceNoWithAd;
-        const instanceNoWithOutAd = JSON.parse((await Redis.client.get(userId + '_onStreaming'))).instanceNoWithOutAd;
+      const instanceNoWithAd = streaming.instanceNoWithAd;
+      const instanceNoWithOutAd = streaming.instanceNoWithOutAd;
 
 
-        console.log('[StreamingService removeCDN] instanceNoWithAd = ', instanceNoWithAd);
-        console.log('[StreamingService removeCDN] instanceNoWithOutAd = ', instanceNoWithOutAd);
+      console.log('[StreamingService removeCDN] instanceNoWithAd = ', instanceNoWithAd);
+      console.log('[StreamingService removeCDN] instanceNoWithOutAd = ', instanceNoWithOutAd);
 
-        streamingRestDAO.removeCDN(instanceNoWithAd);
-        streamingRestDAO.removeCDN(instanceNoWithOutAd);
-      }
+      streamingRestDAO.removeCDN(instanceNoWithAd);
+      streamingRestDAO.removeCDN(instanceNoWithOutAd);
+      
+      return 'success';
     } catch (error) {
       console.log('[StreamingService removeCDN] error = ', error);
+      return 'fail';
     }
   }
 

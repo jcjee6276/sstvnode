@@ -209,7 +209,9 @@ router.get('/updateStreamingCategory', async (req, res) => {
 router.get('/finishStreaming', async (req, res) => {
   try {
     const sessionId = req.cookies.NSESSIONID;
-    const result =  await streamingService.finishStreaming(sessionId);
+    const streamingUserId = req.query.streamingUserId
+    
+    const result =  await streamingService.finishStreaming(sessionId, streamingUserId);
 
     let response;
     if(result != 'fail') {

@@ -7,7 +7,8 @@ class MySQLConnection {
       port : '3306',
       user: 'LDW',
       password: 'LDW',
-      database: 'sstv'
+      database: 'sstv',
+      multipleStatements: true
     },
 
     this.connection = null;
@@ -55,6 +56,16 @@ class MySQLConnection {
       });
     } catch (error) {
       console.log('[MySQLConnetcion query] error = ', error);
+    }
+  }
+
+  format (sql, params) {
+    try {
+      const result = mysql.format(sql, params);
+
+      return result;
+    } catch (error) {
+      console.log('[MySQLConnetcion query] format = ', error);
     }
   }
 }

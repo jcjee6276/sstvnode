@@ -3,37 +3,49 @@ const router = exprss.Router();
 const banService = new (require('../service/BanService'))();
 const Data = require('../model/Data');
 
-/* 
-  1. BAN 테이블에 데이터 넣고 user의 st_ROLL도 업데이트하자
-*/
-router.post('/addStreamingRoleBan', async (req, res) => {
-  const ban = req.body;
-  const result = await banService.addBan(ban);
-  
-  let response;
-  if(result == 'success') {
-    response = new Data('success', '');
-  }else {
-    response = new Data('fail', '');
-  }
 
-  res.json(response);
+router.post('/addStreamingRoleBan', async (req, res) => {
+  try {
+    const ban = req.body;
+    console.log('[BanRouter /addStreamingRoleBan] ban = ', ban);
+    const result = await banService.addStreamingRollBan(ban);
+    
+    let response;
+    if(result == 'success') {
+      response = new Data('success', '');
+    }else {
+      response = new Data('fail', '');
+    }
+
+    res.json(response);
+  } catch (error) {
+    console.log('[BanRouter /addStreamingRoleBan] error = ', error);
+    res.status(500).json({ error: 'Server Internal Error' });
+  }
 });
 
 router.get('/removeStreamingRollBan', async (req, res) => {
-  const userId = req.query.userId;
-  console.log('[BanRouter /removeStreamingRollBan] userId = ', userId);
+  try {
+    const userId = req.query.userId;
+    const streamingRollBanNo = req.query.streamingRollBanNo;
 
-  const result = await banService.removeStreamingRollBan(userId);
+    console.log('[BanRouter /removeStreamingRollBan] userId = ', userId);
+    console.log('[BanRouter /removeStreamingRollBan] streamingRollBanNo = ', streamingRollBanNo);
 
-  let response;
-  if(result == 'success') {
-    response = new Data('success', '');
-  }else {
-    response = new Data('fail', '');
+    const result = await banService.removeStreamingRollBan(streamingRollBanNo, userId);
+
+    let response;
+    if(result == 'success') {
+      response = new Data('success', '');
+    }else {
+      response = new Data('fail', '');
+    }
+
+    res.json(response);
+  } catch (error) {
+    console.log('[BanRouter /removeStreamingRollBan] error = ', error);
+    res.status(500).json({ error: 'Server Internal Error' });
   }
-
-  res.json(response);
 });
 
 router.get('/getStreamingRollBan', async (req, res) => {
@@ -75,24 +87,32 @@ router.get('/getStreamingRollBanList', async (req, res) => {
 });
 
 /* 
-입력 body
-1. userId
-2. banType
-3. banContent
+0 : 관리자가 아닙니다.
+1 : 서버에러
 */
 router.post('/addStreamingBan', async (req, res) => {
-  const ban = req.body;  
-  console.log('[BanRouter /addStreamingBan] ban = ', ban);
-  // const result = await banService.addStreamingBan(ban);
+  try {
+    const sessionId = req.cookies.NSESSIONID;
+    const ban = req.body;  
+    let response;
+    
+    const isAdmin = await banService.isAdmin(sessionId);
+    if(isAdmin) {
+      const result = await banService.addStreamingBan(ban);
 
-  let response;
-  if(result == 'fail') {
-    response = new Data('fail', '');
-  }else {
-    response = new Data('success', '');
+      if(result == 'fail') {
+      response = new Data('fail', '1');
+      }else {
+        response = new Data('success', '');
+      }
+    }else {
+      response = new Data('fail', '0');
+    }
+    res.json(response);
+  } catch (error) {
+    console.log('[BanRouter /addStreamingBan] error = ', error);
+    res.status(500).json({ error: 'Server Internal Error' });
   }
-  
-  res.json(response);
 });
 
 router.get('/getStreamingBan', async (req, res) => {
