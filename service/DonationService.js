@@ -11,10 +11,10 @@ class DonationService {
     try {
       const userId =  donation.USER_ID;
       const streamerId = donation.STREAMING_USER_ID;
-      const donationAmount = donation.DONATION_AMOUNT
-
+      const donationAmount = donation.DONATION_AMOUNT;
+      const donationContent = donation.DONATION_CONTENT; 
       const validateUserCoinResult = await this.validateUserCoin(userId, donationAmount);
-
+      
       if(validateUserCoinResult) {
         const coin = await userDAO.getUserCoin(userId);
         const updateCoin = (coin - donationAmount);
@@ -39,6 +39,7 @@ class DonationService {
 
         }, 2000);
 
+        
         return 'success';
       }else {
         return 'fail';

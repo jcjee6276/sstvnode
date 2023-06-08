@@ -87,14 +87,15 @@ const socketEventHandler = (io) => {
       }
     });
 
-    socket.on('send_donation', async(data) => {
+    socket.on('send_donation', async({data}) => {
       try {
-        const userId = data?.USER_ID;
-        const streamerId = data?.STREAMING_USER_ID;
+        const userId = data?.userId;
+        const streamerId = data?.streamingUserId;
         const donationContent = data?.DONATION_CONTENT;
         const donationAmount = data?.DONATION_AMOUNT;
 
         console.log("???"+data?.USER_ID)
+        console.log("st"+data?.streamingUserId)
         const fileUrl = `https://kr.object.ncloudstorage.com/donation/${userId}_${streamerId}.mp3`;
         const donationMent = `${userId}님이 ${donationAmount}원을 후원하였습니다.  ` + donationContent;
         console.log("?"+userId);

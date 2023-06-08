@@ -54,7 +54,7 @@ class AdDAO {
       
       
       console.log('[AdDAO updateProcessCode] sql = ', sql);
-      const result = new Promise((resolve, rejcet) => {
+      const result = await new Promise((resolve, rejcet) => {
         connection.query(sql, param, (error, result) => {
           if(error) {
             rejcet('fail');

@@ -18,7 +18,7 @@ router.post('/addDonation', async (req, res) => {
       DONATION_DATE : moment().format('YYYY-MM-DD/HH:mm')
     }
     const voiceType = req.body.voiceType
-
+    console.log(donation)
     result = await donationService.addDonation(donation, voiceType);  
 
     if(result == 'success') {

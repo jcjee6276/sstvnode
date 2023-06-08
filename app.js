@@ -21,17 +21,17 @@ global.secretKey = 'nt9eOEVgBxjdmjqOgP9Xee44ADNmEDT171bekE2u';
 global.clientId = 'ie3vug56gz';
 global.clientSecret = 'HAqoUe2ZG2GxgZDVweFjB4DicnttKodNFP2yfp6y';
 
-//해당 시간이 지나면 광고 실행
-//삭제가 덜 된 상태에서 시작하는거 해결해야함
-// setInterval(async () => {
-//   await adService.removeAllLiveCurtain();
-//   try {
-//     await adService.playAd();  
-//   } catch (error) {
-//     console.log('[app.js setInterval] error = ', error);
-//   }
+// 해당 시간이 지나면 광고 실행
+// 삭제가 덜 된 상태에서 시작하는거 해결해야함
+setTimeout(async () => {
+  await adService.removeAllLiveCurtain();
+  try {
+    await adService.playAd();  
+  } catch (error) {
+    console.log('[app.js setInterval] error = ', error);
+  }
   
-// }, 5000);
+}, 30000);
 
 const app = express();
 
