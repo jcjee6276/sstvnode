@@ -18,11 +18,19 @@ router.post('/addDonation', async (req, res) => {
       DONATION_DATE : moment().format('YYYY-MM-DD/HH:mm')
     }
     const voiceType = req.body.voiceType
-    console.log(donation)
+    console.log('[DonationRouter /addDonation] donation = ',donation);
+    console.log('[DonationRouter /addDonation] voiceType = ',voiceType)
     result = await donationService.addDonation(donation, voiceType);  
 
+    console.log('[DonationRouter /addDonation] result = ', result)
     if(result == 'success') {
-      response = new Data('success', '');
+      const data = {
+        USER_ID : req.body.userId,
+        DONATION_AMOUNT : req.body.donationAmount,
+        DONATION_CONTENT : req.body.donationContent
+      }
+      
+      response = new Data('success', data);
     } else {
       response = new Data('fail','');
     }

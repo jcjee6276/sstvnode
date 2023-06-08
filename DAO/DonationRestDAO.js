@@ -20,7 +20,6 @@ class DonationRestDAO {
       var _req = await request.post(options).on('response', function(response) {
         console.log('[DonationRestDAO textToMp3] Create Donation MP3 ');
         console.log(response.statusCode); // 200
-        console.log(response.headers['content-type']);
       });
       _req.pipe(writeStream); // file로 출력
     } catch (error) {

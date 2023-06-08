@@ -23,15 +23,15 @@ global.clientSecret = 'HAqoUe2ZG2GxgZDVweFjB4DicnttKodNFP2yfp6y';
 
 // 해당 시간이 지나면 광고 실행
 // 삭제가 덜 된 상태에서 시작하는거 해결해야함
-setTimeout(async () => {
-  await adService.removeAllLiveCurtain();
-  try {
-    await adService.playAd();  
-  } catch (error) {
-    console.log('[app.js setInterval] error = ', error);
-  }
+// setTimeout(async () => {
+//   await adService.removeAllLiveCurtain();
+//   try {
+//     await adService.playAd();  
+//   } catch (error) {
+//     console.log('[app.js setInterval] error = ', error);
+//   }
   
-}, 30000);
+// }, 30000);
 
 const app = express();
 
