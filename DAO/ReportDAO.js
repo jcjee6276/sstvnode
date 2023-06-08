@@ -29,7 +29,7 @@ class ReportDAO {
     } catch (error) {
       console.log('[ReportDAO addReport] error = ', error);
     } finally {
-      connection.disconnect();
+      connection.end();
     }
   }
 
@@ -59,6 +59,8 @@ class ReportDAO {
       return result;
     } catch (error) {
       console.log('[ReportDAO getReport] error = ', error);
+    } finally {
+      connection.end();
     }
   }
 
@@ -102,6 +104,8 @@ class ReportDAO {
       return response;
     } catch (error) {
       console.log('[ReportDAO getReportList] error = ', error);
+    } finally {
+      connection.end();
     }
   }
   
@@ -125,6 +129,8 @@ class ReportDAO {
       return response;
     } catch (error) {
       console.log('[ReportDAO removeReport] error = ', error);
+    } finally {
+      connection.end();
     }
   }
 }

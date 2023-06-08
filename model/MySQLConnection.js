@@ -28,7 +28,7 @@ class MySQLConnection {
     }
   }
 
-  disconnect() {
+  // disconnect() {
     // try {
     //   if(this.connection) {
     //     this.connection.end();
@@ -37,7 +37,7 @@ class MySQLConnection {
     // } catch (error) {
     //   console.log('[MySQLConnection disconnect] error = ', error);
     // }
-  }
+  // }
 
   query(sql, params, callback) {
     try {
@@ -66,6 +66,20 @@ class MySQLConnection {
       return result;
     } catch (error) {
       console.log('[MySQLConnetcion query] format = ', error);
+    }
+  }
+
+  end() {
+    try {
+      if(this.connection) {
+        this.connection.end((error) => {
+          if(error) {
+            console.log('[MySQLConnection end] error1 = ', error);
+          }
+        })
+      }
+    } catch (error) {
+      console.log('[MySQLConnection end] error2 = ', error);
     }
   }
 }

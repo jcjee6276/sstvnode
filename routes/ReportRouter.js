@@ -7,6 +7,7 @@ const Data = require('../model/Data');
 router.post('/addReport', async (req, res) => {
   const sessionId = req.cookies.NSESSIONID;
   const report = req.body;
+
   const result = await reportService.addReport(sessionId , report);
 
   let response;

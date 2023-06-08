@@ -168,6 +168,8 @@ class BanDAO {
       return result;
     } catch (error) {
       console.log('[BanDAO addStreamingBan] error = ', error);
+    } finally {
+      connection.end();
     }
   }
 
@@ -215,7 +217,9 @@ class BanDAO {
       return response;
     } catch (error) {
       console.log('[BanDAO getStreamingBanList] error = ', error);
-    } 
+    } finally {
+      connection.end();
+    }
   }
 }
 module.exports = BanDAO;

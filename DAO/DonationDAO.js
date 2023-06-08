@@ -9,13 +9,21 @@ class DonationDAO {
       const sql = "INSERT INTO DONATION SET ?"
       const param = donation;
 
-      connection.query(sql, param, (error, result) => {
-        if(error) {
-          console.log('[DonationDAO addDonation] error = ', error);
-        }
-      });
+      const response = await new Promise((resolve, rejcet) => {
+        connection.query(sql, param, (error, result) => {
+          if(error) {
+            console.log('[DonationDAO addDonation] error = ', error);
+            resolve('fail');
+          }else {
+            resolve('success');
+          }
+        });
+      }) 
     } catch (error) {
       console.log('[DonationDAO addDonation] error = ', error);
+      return 'fail';
+    } finally {
+      connection.end();
     }
   }
 
@@ -53,6 +61,8 @@ class DonationDAO {
       return donationList;
     } catch (error) {
       console.log('[DonationDAO getDonationList] error = ' ,error );
+    } finally {
+      connection.end();
     }
   } 
 }

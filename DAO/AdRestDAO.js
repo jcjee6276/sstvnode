@@ -29,7 +29,7 @@ class adRestDAO {
       }).promise();
     } catch (error) {
       console.log('[AdRestDAO uploadFileToObjectStorage] error = ', error);
-    }
+    } 
   }
 
   async removeFileFromObjectStorage(fileName) {

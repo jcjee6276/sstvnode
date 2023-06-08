@@ -31,7 +31,7 @@ class StreamingDAO {
     } catch (error) {
       console.log('[StreamingDAO insertStreaming] error = ', error);
     } finally {
-      connection.disconnect();
+      connection.end();
     }
   }
 
@@ -39,8 +39,14 @@ class StreamingDAO {
     try {
       await connection.connect();
 
-      const sql = 'UPDATE STREAMING SET USER_ID = ?, STREAMING_CATEGORY = ?, STREAMING_TITLE = ?, ' +
-      'STREAMING_START_TIME = ?, STREAMING_END_TIME = ?, TOTAL_STREAMING_VIEWER = ? , RECORD_URL = ? WHERE STREAMING_NO = ?';
+      const streamingStartTimeObject = moment(streaming.streamingStartTime, 'YYYY-MM-DD/HH:mm');
+      const streamingEndTimeObject = moment();
+
+      const duration = moment.duration(streamingEndTimeObject.diff(streamingStartTimeObject));
+      const timeDiff = Math.floor(duration.asMinutes());
+
+      const streamingSQL = 'UPDATE STREAMING SET USER_ID = ?, STREAMING_CATEGORY = ?, STREAMING_TITLE = ?, ' +
+      'STREAMING_START_TIME = ?, STREAMING_END_TIME = ?, TOTAL_STREAMING_VIEWER = ? , RECORD_URL = ? WHERE STREAMING_NO = ?;';
 
       const param = [
         streaming.userId,
@@ -53,15 +59,25 @@ class StreamingDAO {
         streaming.streamingPk
       ]
 
-      connection.query(sql, param, (error, result) => {
-        if(error) {
-          console.log('[StreamingDAO finishStreaming] error = ', error);
-        }
-      });
+      console.log('[timeDiff] = ', timeDiff);
+      const userSQL =  ` UPDATE USER SET ACCUMULATED_VIEWERS = ACCUMULATED_VIEWERS + ${streaming.totalStreamingViewer},`
+                      + ` TOTAL_STREAMING_ACCUMULATED_TIME = TOTAL_STREAMING_ACCUMULATED_TIME + ${timeDiff} ;`
+
+      const response = await new Promise((resolve, reject) => {
+        connection.query(streamingSQL + userSQL, param, (error, result) => {
+          if(error) {
+            console.log('[StreamingDAO finishStreaming] error = ', error);
+            resolve('fail');
+          }else {
+            resolve('success');
+          }
+        });
+      })
+       
     } catch (error) {
       console.log('[StreamingDAO finishStreaming] error = ', error);
     } finally {
-      connection.disconnect();
+      connection.end();
     }
   }
 
@@ -92,6 +108,8 @@ class StreamingDAO {
     } catch (error) {
       console.log('[StreamingDAO getStreaming] error = ', error);
       return 'fail';
+    } finally {
+      connection.end();
     }
   }
 }

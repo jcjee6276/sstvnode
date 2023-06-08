@@ -1,10 +1,10 @@
-const banDAO = new(require('./DAO/BanDAO'));
+const streamingDAO = new (require('./DAO/StreamingDAO'))();
+const Redis = require('./model/Redis');
 
-const getAdList = async () => {
-  
-  banDAO.removeStreamingRollBan(1, 'user1');
+const finishStreaming = async () => {
+  const streaming = await Redis.client.get('user1_onStreaming');
+  console.log('streaming = ' , streaming);
+  streamingDAO.finishStreaming(JSON.parse(streaming));
 }
 
-getAdList();
-
-
+finishStreaming();

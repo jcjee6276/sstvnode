@@ -28,7 +28,7 @@ class AdDAO {
     } catch (error) {
       console.log('[AdDAO addAdReq] error = ', error);  
     } finally {
-      connection.disconnect();
+      connection.end();
     }
   }
 
@@ -75,7 +75,7 @@ class AdDAO {
       console.log('[AdDAO setCurtainId] error = ', error);  
       return 'fail';
     } finally {
-      connection.disconnect();
+      connection.end();
     }
   }
 
@@ -107,7 +107,7 @@ class AdDAO {
     } catch (error) {
       console.log('[AdDAO setCurtainId] error = ', error);  
     } finally {
-      connection.disconnect();
+      connection.end();
     }
   }
 
@@ -127,7 +127,7 @@ class AdDAO {
     } catch (error) {
       console.log('[AdDAO setCurtainId] error = ', error);
     } finally {
-      connection.disconnect();
+      connection.end();
     }
 
   }
@@ -178,7 +178,7 @@ class AdDAO {
     } catch (error) {
       console.log('[AdDAO getAdReqList] error = ', error);
     } finally {
-      connection.disconnect();
+      connection.end();
     }
   }
 
@@ -214,7 +214,7 @@ class AdDAO {
     } catch (error) {
       console.log('[AdDAO getAdList] error = ', error);
     } finally {
-      connection.disconnect();
+      connection.end();
     }
   }
 
@@ -242,7 +242,7 @@ class AdDAO {
     } catch (error) {
       console.log('[AdDAO updateAdPlaysCount] error = ', error);
     } finally {
-      connection.disconnect();
+      connection.end();
     }
   }
 
@@ -268,7 +268,7 @@ class AdDAO {
     } catch (error) {
       console.log('[AdDAO updateAdStreamingPlaysCount] error = ', error);
     } finally {
-      connection.disconnect();
+      connection.end();
     }
   }
 
@@ -295,7 +295,7 @@ class AdDAO {
     } catch (error) {
       console.log('[AdDAO updateAdTotalViewer] error = ', error);
     } finally {
-      connection.disconnect();
+      connection.end();
     }
   }
 }

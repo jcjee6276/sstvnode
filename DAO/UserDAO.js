@@ -10,59 +10,77 @@ class UserDAO {
       const sql = 'UPDATE USER SET COIN = ? WHERE USER_ID = ?';
       const param = [coin, userId];
 
-      connection.query(sql, param, (error, result) => {
-        if(error) {
-          console.log('[UserDAO updateCoin] error = ', error);
-        }
-      });
+      const response = await new Promise((resolve, rejcet) => {
+        connection.query(sql, param, (error, result) => {
+          if(error) {
+            console.log('[UserDAO updateCoin] error = ', error);
+            resolve('fail');
+          }else {
+            resolve('success');
+          }
+        });
+      }) 
     } catch (error) {
       console.log('[UserDAO updateUserCoin] error = ', error);
+      return 'fail';
     } finally {
-      connection.disconnect();
+      connection.end();
     }
   }
 
   //1 : 광고신청 2: 광고신청 거절
   async addUserCoinHistory(userId, price, prodName) {
-    connection.connect();
-
-    const sql = 'INSERT INTO COIN_HISTORY (USER_ID, PRICE, PROD_NAME) VALUES(?, ?, ?) ';
-    const param = [userId, price, prodName];
-
-    connection.query(sql, param, (error, result) => {
-      if(error) {
-        console.log('[UserDAO decreaseCoin] error = ', error);
-        return "fail";
-      }
-
-      connection.disconnect();
-      return "success";
-    });
-  }
-
-  getUserCoin(userId) {
-    return new Promise((resolve, rejcet) => {
+    try {
       connection.connect();
 
-      const sql = 'SELECT COIN FROM USER WHERE USER_ID = ?'
-      const param = [userId];
+      const sql = 'INSERT INTO COIN_HISTORY (USER_ID, PRICE, PROD_NAME) VALUES(?, ?, ?) ';
+      const param = [userId, price, prodName];
 
-      connection.query(sql, param, (error, result) => {
-        if(error) {
-          console.log('[UserDAO getUserCoin] error = ', error);
-          connection.disconnect(); 
-          return;
-        }
+      const response = await new Promise((resolve, reject) => {
+        connection.query(sql, param, (error, result) => {
+          if(error) {
+            console.log('[UserDAO decreaseCoin] error = ', error);
+            resolve('fail');
+          }else {
+            resolve('success');
+          }          
+        });
+      })
+    } catch (error) {
+      console.log('[UserDAO addUserCoinHistory] error = ', error);
+    } finally {
+      connection.end();
+    }
+  }
 
-        let coin;
-        if(result.length > 0) {
-          coin = result[0].COIN;
-        }
-        
-        console.log('[UserDAO getUserCoin] coin = ', coin);
-        resolve(coin);
+  async getUserCoin(userId) {
+    try {
+      const response = await new Promise((resolve, rejcet) => {
+        connection.connect();
+  
+        const sql = 'SELECT COIN FROM USER WHERE USER_ID = ?'
+        const param = [userId];
+  
+        connection.query(sql, param, (error, result) => {
+          if(error) {
+            console.log('[UserDAO getUserCoin] error = ', error);
+            return;
+          }
+  
+          let coin;
+          if(result.length > 0) {
+            coin = result[0].COIN;
+          }
+          resolve(coin);
+        });
       });
-    });
+
+      return response;
+    } catch (error) {
+      console.log('[UserDAO getUserCoin] error = ', error);
+    } finally {
+      connection.end();
+    }
   }
 
   async getUserTicket(userId) {
@@ -92,7 +110,7 @@ class UserDAO {
     } catch (error) {
       console.log('[UserDAO getUserTicket] error = ', error);
     } finally {
-      connection.disconnect();
+      connection.end();
     }
   } 
 
@@ -116,6 +134,8 @@ class UserDAO {
       return result;
     } catch (error) {
       console.log('[UserDAO updateStRoll] error = ', error);
+    } finally {
+      connection.end();
     }
   }
 
@@ -160,6 +180,8 @@ class UserDAO {
     } catch (error) {
       console.log('[UserDAO getAdminUserList] error = ', error);
       return 'fail';
+    } finally {
+      connection.end();
     }
   }
   

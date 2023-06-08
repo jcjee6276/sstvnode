@@ -1,8 +1,9 @@
 const donationRestDAO = new (require('../DAO/DonationRestDAO'))();
 const donationDAO = new (require('../DAO/DonationDAO'))();
 const userDAO = new (require('../DAO/UserDAO'))();
+const { error } = require('console');
 const Redis = require('../model/Redis');
-const sockHandler = require('../sokets/socketHandler');
+const fs = require('fs');
 
 class DonationService {
   
@@ -12,22 +13,35 @@ class DonationService {
       const streamerId = donation.STREAMING_USER_ID;
       const donationAmount = donation.DONATION_AMOUNT
 
-      if(this.validateUserCoin(userId, donationAmount)) {
+      const validateUserCoinResult = await this.validateUserCoin(userId, donationAmount);
+
+      if(validateUserCoinResult) {
         const coin = await userDAO.getUserCoin(userId);
         const updateCoin = (coin - donationAmount);
         
-        userDAO.updateUserCoin(updateCoin, userId);
-        userDAO.addUserCoinHistory(userId, donationAmount, 0);
-        donationDAO.addDonation(donation);
-
         const content = `${userId}님이 ${donationAmount}원을 후원하였습니다.  ` + donation.DONATION_CONTENT;
         const fileName = `${userId}_${streamerId}.mp3`;
         
         await donationRestDAO.textToMp3(content, voiceType, fileName);
+
         setTimeout(async() => {
           await donationRestDAO.uploadFileToObjectStorage(fileName);
+
+          fs.unlink(`./public/donation/${fileName}`, (error) => {
+            if(error) {
+              console.log('[DonationService addDonation] unlickError = ', error);
+            }
+          });
+
+          await donationDAO.addDonation(donation);
+          await userDAO.updateUserCoin(updateCoin, userId);
+          await userDAO.addUserCoinHistory(userId, donationAmount, 0);
+
         }, 2000);
+
         return 'success';
+      }else {
+        return 'fail';
       }
     } catch (error) {
       console.log('[DonationService addDonation] error = ', error);
