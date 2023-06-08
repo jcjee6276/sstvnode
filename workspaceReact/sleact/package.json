@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "bcrypt": "^5.1.0",
+    "fork-ts-checker-webpack-plugin": "^8.0.0",
+    "webpack-bundle-analyzer": "^4.8.0"
+  }
+}
