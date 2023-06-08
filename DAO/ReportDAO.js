@@ -17,13 +17,17 @@ class ReportDAO {
         REPORT_DATE : moment().format('YYYY-MM-DD/HH:mm')
       }
 
-      let response = 'success';
-      connection.query(sql, param, (error, result) => {
-        if(error) {
-          console.log('[ReportDAO addReport] error = ', error);
-          response = 'fail';
-        }
-      });
+      const response = new Promise((resolve, rejcet) => {
+        connection.query(sql, param, (error, result) => {
+          if(error) {
+            console.log('[ReportDAO addReport] error = ', error);
+            resolve('fail');
+          }else {
+            resolve('success');
+          }
+        });
+      })
+      
 
       return response;
     } catch (error) {

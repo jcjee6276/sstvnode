@@ -166,14 +166,18 @@ router.get('/getStreamingList', async (req, res) => {
   }
 });
 
-router.get('/updateStreamingTitle', async (req, res) => {
+router.get('/updateStreamingTitleAndCategory', async (req, res) => {
   try {
     const sessionId = req.cookies.NSESSIONID;
     const streamingTitle =  req.query.streamingTitle;
-    const result = await streamingService.updateStreamingTitle(sessionId, streamingTitle);
+    const streamingCategory = req.query.streamingCategory;
+    const streamingUserId = req.query.streamingUserId;
 
+    const streamingTitleResult = await streamingService.updateStreamingTitle(sessionId, streamingTitle, streamingUserId);
+    const streamingCategoryResult = await streamingService.updateStreamingCategory(sessionId, streamingCategory,streamingUserId);
+    
     let response;
-    if(result == 'success') {
+    if((streamingTitleResult == 'success') && (streamingCategoryResult == 'success')) {
       response = new Data('success', '');
     } else {
       response = new Data('fail','');
@@ -186,25 +190,25 @@ router.get('/updateStreamingTitle', async (req, res) => {
   }
 });
 
-router.get('/updateStreamingCategory', async (req, res) => {
-  try {
-    const sessionId = req.cookies.NSESSIONID;
-    const streamingCategory =  req.query.streamingCategory;
-    const result = await streamingService.updateStreamingCategory(sessionId, streamingCategory);
+// router.get('/updateStreamingCategory', async (req, res) => {
+//   try {
+//     const sessionId = req.cookies.NSESSIONID;
+//     const streamingCategory =  req.query.streamingCategory;
+//     const result = await streamingService.updateStreamingCategory(sessionId, streamingCategory);
 
-    let response;
-    if(result == 'success') {
-      response = new Data('success', '');
-    } else {
-      response = new Data('fail','');
-    }
+//     let response;
+//     if(result == 'success') {
+//       response = new Data('success', '');
+//     } else {
+//       response = new Data('fail','');
+//     }
     
-    res.json(response);
-  } catch (error) {
-    console.log('[StreamingRouter /updateStreamingCategory] error = ', error);
-    res.status(500).json({ error: 'Server Internal Error' });
-  }
-});
+//     res.json(response);
+//   } catch (error) {
+//     console.log('[StreamingRouter /updateStreamingCategory] error = ', error);
+//     res.status(500).json({ error: 'Server Internal Error' });
+//   }
+// });
 
 router.get('/finishStreaming', async (req, res) => {
   try {

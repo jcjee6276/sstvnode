@@ -13,17 +13,19 @@ const socketEventHandler = (io) => {
     });
 
     //스트리밍(채팅방)입장 roomName은 스트리밍 송출중인 회원의 userId
-    socket.on('join_room', async ({roomName, data}) => {
+    socket.on('join_room', async ({roomName, userId}) => {
       try {
         socket.join(roomName);
-        console.log('[joinRoom]');
-      
-        const{streamingViewer, totalStreamingViewer} = await updateViewer(roomName, data.userId);
+        console.log('[joinRoom] roomName = ', roomName);
+        console.log('[joinRoom] userId = ', userId);
+
+        const{streamingViewer, totalStreamingViewer} = await updateViewer(roomName, userId);
 
         io.to(roomName).emit('join_room', {
           streamingViewer : streamingViewer,
           totalStreamingViewer : totalStreamingViewer
         });
+        
       } catch (error) {
         console.log('[socketHandler join_room] error = ', error);
       }
@@ -49,12 +51,16 @@ const socketEventHandler = (io) => {
     //스트리밍(채팅방) 떠나기, 실시간 시청자수 감소
     socket.on('leave_room', async (request) => {
       try {
-        const userId = request.data.userId;
+        const userId = request.userId;
         const roomName = request.roomName;
 
+        console.log('[sockeHandler leave_room] userId = ', userId);
+        console.log('[sockeHandler leave_room] roomName = ', roomName);
+
         if(userId && roomName) {
-          const streamingViewer = await leaveRoom(roomName);
-          
+          const streamingViewer = await leaveRoom(roomName, userId);
+          console.log('[sockeHandler leave_room] streamingViewer = ', streamingViewer);
+
           socket.to(roomName).emit('leave_room' ,{
             streamingViewer : streamingViewer
           });
@@ -64,42 +70,51 @@ const socketEventHandler = (io) => {
       }
     });
 
-    //실시간 스트리밍 제목 변환
-    socket.on('updateStreamingTitle', async ({roomName, data}) => {
+    //실시간 스트리밍 제목, 카테고리 변경
+    socket.on('updateStreamingTitleAndCategory', (data) => {
       try {
-        const streamingTitle = await updateStreamingTitle(data.roomName);
-        io.to(roomName).emit('updateStreamingTitle', streamingTitle);
+        const streamingTitle = data.streamingTitle;
+        const streamingCategory = data.streamingCategory;
+        const roomName = data.roomName;
+
+        console.log('[socketHandler updateStreamingTitleAndcategory] data = ', data);
+        io.to(roomName).emit('updateStreamingTitleAndCategory', {
+          streamingTitle : streamingTitle,
+          streamingCategory : streamingCategory
+        });
       } catch (error) {
         console.log('[socketHandler updateStreamingTitle] error = ', error);
       }
     });
 
-    //실시간 카테고리 변환
-    socket.on('updateStreamingCategory', async ({roomName, data}) => {
+    socket.on('send_donation', async(data) => {
       try {
-        console.log('[asdasdas ] data = ', data);
-        const streamingCategory = await updateStreamingCategory(data.roomName);
-        io.to(roomName).emit('updateStreamingCategory', streamingCategory);
-      } catch (error) {
-        console.log('[socketHandler updateStreamingCategory] error = ', error);
-      }
-    });
+        const userId = data?.USER_ID;
+        const streamerId = data?.STREAMING_USER_ID;
+        const donationContent = data?.DONATION_CONTENT;
+        const donationAmount = data?.DONATION_AMOUNT;
 
-    socket.on('send_donation', async({data}) => {
-      try {
-        const userId = data.userId;
-        const streamerId = data.streamerId;
-        const donationContent = data.donationContent;
-        const donationAmount = data.donationAmount;
-
+        console.log("???"+data?.USER_ID)
         const fileUrl = `https://kr.object.ncloudstorage.com/donation/${userId}_${streamerId}.mp3`;
         const donationMent = `${userId}님이 ${donationAmount}원을 후원하였습니다.  ` + donationContent;
+        console.log("?"+userId);
         
-        io.to(streamerId).emit('receive_donation', {fileUrl : fileUrl , donationMent : donationMent});
+        io.to(streamerId).emit('receive_donation', {data, fileUrl : fileUrl , donationMent : donationMent} );
       } catch (error) {
         console.log('[socketHandler socket.on(send_donation)] error2 = ', error);  
       };
     });
+
+    socket.on('ban_streaming', (data) => {
+      const roomName = data.roomName;
+      const banType = data.banType;
+      const banContent = data.banContent;
+
+      io.to(roomName).emit('ban_streaming', {
+        banType : banType,
+        banContent : banContent
+      } );
+    })
   });   
 }
 
@@ -121,7 +136,11 @@ async function updateViewer(roomName, userId) {
       on_streaming.totalStreamingViewer = viewerList.size;
 
       //실시간 시청자수 증가
-      on_streaming.streamingViewer++;
+      if(!on_streaming.streamingViewerList.includes(userId)) {
+        on_streaming.streamingViewerList.push(userId);
+        on_streaming.streamingViewer = on_streaming.streamingViewerList.length;
+      }
+      
 
       await Redis.client.set(roomName + '_onStreaming', JSON.stringify(on_streaming));
 
@@ -137,14 +156,20 @@ async function updateViewer(roomName, userId) {
   }
 }
 
-async function leaveRoom(roomName) {
+async function leaveRoom(roomName, userId) {
   try {
     const key = roomName + '_onStreaming'
     let streaming = await Redis.client.get(key);
 
     if(streaming) {
       streaming = JSON.parse(streaming);
-      streaming.streamingViewer--;
+
+      if(streaming.streamingViewerList.includes(userId)) {
+        const index = streaming.streamingViewerList.indexOf(userId);
+        streaming.streamingViewerList.splice(index, 1);
+      }
+
+      streaming.streamingViewer = streaming.streamingViewerList.length;
 
       await Redis.client.set(key, JSON.stringify(streaming));
       return streaming.streamingViewer;
@@ -156,34 +181,34 @@ async function leaveRoom(roomName) {
   }
 }
 
-async function updateStreamingTitle(userId) {
-  try {
-    const streaming = await Redis.client.get(userId + '_onStreaming');
+// async function updateStreamingTitle(userId) {
+//   try {
+//     const streaming = await Redis.client.get(userId + '_onStreaming');
 
-    if(streaming) {
-      const streamingTitle = JSON.parse(streaming).streamingTitle;
-      return streamingTitle;
-    } else {
-      throw new Error('updateStreamingTitle error');
-    }
-  } catch (error) {
-    console.log('[socketHandler updateStreamingTitle] error = ', error);
-  }
-}
+//     if(streaming) {
+//       const streamingTitle = JSON.parse(streaming).streamingTitle;
+//       return streamingTitle;
+//     } else {
+//       throw new Error('updateStreamingTitle error');
+//     }
+//   } catch (error) {
+//     console.log('[socketHandler updateStreamingTitle] error = ', error);
+//   }
+// }
 
-async function updateStreamingCategory(userId) {
-  try {
-    const streaming = await Redis.client.get(userId + '_onStreaming');
+// async function updateStreamingCategory(userId) {
+//   try {
+//     const streaming = await Redis.client.get(userId + '_onStreaming');
 
-    if(streaming) {
-      const streamingCategory = JSON.parse(streaming).streamingCategory;
-      return streamingCategory;
-    } else {
-      throw new Error('updateStreamingCategory error');
-    }
-  } catch (error) {
-    console.log('[socketHandler updateStreamingCategory] error = ', error);
-  }
-}
+//     if(streaming) {
+//       const streamingCategory = JSON.parse(streaming).streamingCategory;
+//       return streamingCategory;
+//     } else {
+//       throw new Error('updateStreamingCategory error');
+//     }
+//   } catch (error) {
+//     console.log('[socketHandler updateStreamingCategory] error = ', error);
+//   }
+// }
 
 module.exports = socketEventHandler;

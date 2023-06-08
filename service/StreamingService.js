@@ -315,37 +315,48 @@ class StreamingService {
     }
   }
 
-  async updateStreamingTitle(sessionId, newTitle) {
+  async updateStreamingTitle(sessionId, newTitle, streamingUserId) {
+    try {
+      const result = JSON.parse(await this.isStreamingOwner(sessionId, streamingUserId));
 
-    console.log('[StreamingService updateStreamingTitle] sessionId = ', sessionId);
-    const result = JSON.parse(await this.isStreamingOwner(sessionId));
+      let streaming = await Redis.client.get(streamingUserId + '_onStreaming');
+      if(streaming && result) {
+        streaming = JSON.parse(streaming);
+        streaming.streamingTitle = newTitle;
 
-    console.log('[StreamingService updateStremaingTitle] result = ', result);
-    if(result) {
-      result.streamingTitle = newTitle;
+        const userId = JSON.parse(await Redis.client.get(sessionId + '_user')).userId;
+        Redis.client.set(userId + '_onStreaming', JSON.stringify(streaming));
+        
+        return 'success';
+      }
 
-      console.log('[StreamingService udpateStreamingTitle] result = ', result);
-      const userId = JSON.parse(await Redis.client.get(sessionId + '_user')).userId;
-      Redis.client.set(userId + '_onStreaming', JSON.stringify(result));
-      
-      return 'success';
+      return 'fail';
+    } catch (error) {
+      console.log('[StreamingService udpateStreamingTitle] error = ', error);
+      return 'fail';
     }
-
-    return 'fail';
   }
 
-  async updateStreamingCategory(sessionId, newCategory) {
-    const result = JSON.parse(await this.isStreamingOwner(sessionId));
+  async updateStreamingCategory(sessionId, newCategory, streamingUserId) {
+    try {
+      const result = JSON.parse(await this.isStreamingOwner(sessionId, streamingUserId));
 
-    if(result) {
-      result.streamingCategory = newCategory;
+      let streaming = await Redis.client.get(streamingUserId + '_onStreaming');
 
-      const userId = JSON.parse(await Redis.client.get(sessionId + '_user')).userId;
-      Redis.client.set(userId + '_onStreaming', JSON.stringify(result));
-      
-      return 'success';
+      if(streaming &&  result) {
+        streaming = JSON.parse(streaming);
+        streaming.streamingCategory = newCategory;
+
+        const userId = JSON.parse(await Redis.client.get(sessionId + '_user')).userId;
+        Redis.client.set(userId + '_onStreaming', JSON.stringify(streaming));
+        
+        return 'success';
+      }
+      return 'fail';
+    } catch (error) {
+      console.log('[StreamingService udpateStreamingTitle] error = ', error);
+      return 'fail';
     }
-    return 'fail';
   }
 
   //관리자인지 스트리머회원인지는 라우터에서 판단하기
@@ -566,6 +577,7 @@ class StreamingService {
         'streamingEndTime' : '',
         'totalStreamingViewer' : 0,
         'streamingViewer' : 0,
+        'streamingViewerList' : [],
   
         'publishUrlWithAd' : streamingObjectWithAd.content.publishUrl,
         'streamKeyWithAd' : streamingObjectWithAd.content.streamKey,
