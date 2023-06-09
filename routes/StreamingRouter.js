@@ -156,9 +156,11 @@ router.get('/getStreamingViewerPage', async (req, res) => {
 router.get('/getStreamingList', async (req, res) => {
   try {
     const searchCondition = req.query.searchCondition;
-    const searchKeyword = req.query.searchCondition;
-
+    const searchKeyword = req.query.searchKeyword;
+    
     const streamingList = await streamingService.getStreamingList(searchCondition, searchKeyword);
+    
+    console.log('[StreamingRouter /getStreamingList] streamingList = ', streamingList);
     res.json(new Data('success', streamingList));
   } catch (error) {
     console.error('[StreamingRouter /getStreamingList] error = ', error);
@@ -245,10 +247,10 @@ router.get('/getAdminStreamingList', async (req, res) => {
   }
 });
 
-router.get('/getStreaming', async (req, res) => {
+router.get('/getStreamingByUserId', async (req, res) => {
   try {
     const userId =  req.query.userId;
-    const result = await streamingService.getStreaming(userId);
+    const result = await streamingService.getStreamingByUserId(userId);
 
     let resposne;
     if(result == 'fail') {
@@ -260,6 +262,26 @@ router.get('/getStreaming', async (req, res) => {
     res.json(resposne);
   } catch (error) {
     console.log('[StreamingRouter /getStreaming] error = ', error);
+    res.status(500).json({ error: 'Server Internal Error' });
+  }
+});
+
+router.get('/getStreamingByStreamingNo', async (req, res) => {
+  try {
+    const streamingNo = req.query.streamingNo;
+    const result = await streamingService.getStreamingByStreamingNo(streamingNo);
+
+    let resposne;
+    if(result == 'fail') {
+      resposne = new Data('fail', '');
+    }else {
+      resposne = new Data('success', result);
+    }
+
+    res.json(resposne);
+  } catch (error) {
+    console.log('[StreamingRouter /getStreaming] error = ', error);
+    res.status(500).json({ error: 'Server Internal Error' });
   }
 });
 

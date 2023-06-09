@@ -218,11 +218,6 @@ class StreamingService {
       let streamingList = await this.searchByKeyword(searchKeyword);
       await this.sortStreamingList(searchCondition,streamingList);
 
-      // const keys = await Redis.client.keys('*_onStreaming');
-      // for (const key of keys) {
-      //   const streaming = await Redis.client.get(key);
-      //   streamingList.push(JSON.parse(streaming));
-      // }
       return streamingList;  
     } catch (error) {
       console.log('[StreamingService getStreamingList] error = ', error);
@@ -279,15 +274,18 @@ class StreamingService {
     try {
       if(searchKeyword == null || searchKeyword == undefined) searchKeyword = '';
       const keys = await Redis.client.keys('*_onStreaming');
-    
+
       const streamingList = [];
       for(const key of keys) {
         const streaming = JSON.parse(await Redis.client.get(key));
 
-        if(streaming.userNickname.includes(searchKeyword) || streaming.streamingTitle.includes(searchKeyword)) {
+        if(streaming.userNickname.includes(searchKeyword) 
+        || streaming.streamingTitle.includes(searchKeyword) 
+        || streaming.userId.includes(searchKeyword)) {
           streamingList.push(streaming);
         }
       }
+
       return streamingList;
     } catch (error) {
       console.log('[StreamingService searchByKeyword] error = ', error);
@@ -654,16 +652,24 @@ class StreamingService {
     return 'fail';
   }
 
-  async getStreaming(userId) {
+  async getStreamingByUserId(userId) {
     try {
-      const streaming = await streamingDAO.getStreaming(userId);
+      const streaming = await streamingDAO.getStreamingByUserId(userId);
 
       return streaming;
     } catch (error) {
       console.log('[StreamingService /getStreaming] error = ' + error);
     }
+  }
 
-  
+  async getStreamingByStreamingNo(streamingNo) {
+    try {
+      const streaming = await streamingDAO.getStreamingByStreamingNo(streamingNo);
+
+      return streaming;
+    } catch (error) {
+      console.log('[StreamingService /getStreaming] error = ' + error);
+    }
   }
 }
 

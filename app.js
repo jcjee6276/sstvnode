@@ -20,6 +20,7 @@ global.accessKey = 'z4Xcnb9Fi7MmuSeksVf4';
 global.secretKey = 'nt9eOEVgBxjdmjqOgP9Xee44ADNmEDT171bekE2u';
 global.clientId = 'ie3vug56gz';
 global.clientSecret = 'HAqoUe2ZG2GxgZDVweFjB4DicnttKodNFP2yfp6y';
+global.adCycle = 1000 * 60 * 60;
 
 // 해당 시간이 지나면 광고 실행
 // 삭제가 덜 된 상태에서 시작하는거 해결해야함

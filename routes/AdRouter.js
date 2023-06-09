@@ -104,5 +104,18 @@ router.get('/getAdList', async (req, res) => {
     res.status(500).json({ error: 'Server Internal Error' });
   }
 }); 
+
+router.get('/updateAdCycle', async (req, res) => {
+  try {
+    const adCycle = req.query.adCycle;
+    global.adCycle = 1000 * 60 * Number(adCycle);
+
+    const response = new Data('success', '');
+    res.json(response);
+  } catch (error) {
+    console.log('[AdRouter /updateAdCycle] error = ', error);
+    res.status(500).json({ error: 'Server Internal Error' });
+  }
+});
   
 module.exports = router;
