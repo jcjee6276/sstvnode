@@ -653,6 +653,18 @@ class StreamingService {
 
     return 'fail';
   }
+
+  async getStreaming(userId) {
+    try {
+      const streaming = await streamingDAO.getStreaming(userId);
+
+      return streaming;
+    } catch (error) {
+      console.log('[StreamingService /getStreaming] error = ' + error);
+    }
+
+  
+  }
 }
 
 

@@ -3,7 +3,7 @@ const moment = require('moment');
 
 class ReportDAO {
   
-  async addReport(report) {
+  async addReport (report) {
     try {
       connection.connect();
 
@@ -17,7 +17,7 @@ class ReportDAO {
         REPORT_DATE : moment().format('YYYY-MM-DD/HH:mm')
       }
 
-      const response = new Promise((resolve, rejcet) => {
+      const response = await new Promise((resolve, rejcet) => {
         connection.query(sql, param, (error, result) => {
           if(error) {
             console.log('[ReportDAO addReport] error = ', error);

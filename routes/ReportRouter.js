@@ -5,9 +5,11 @@ const moment = require('moment');
 const Data = require('../model/Data');
 
 router.post('/addReport', async (req, res) => {
+  console.log('[init addReport]');
   const sessionId = req.cookies.NSESSIONID;
   const report = req.body;
 
+  console.log('[ReportRouter /addReport] report = ', report);
   const result = await reportService.addReport(sessionId , report);
 
   let response;

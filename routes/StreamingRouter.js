@@ -101,7 +101,7 @@ router.get('/getMyStreamingPage', async (req, res) => {
     resposne = new Data('success', _onStreaming, _onStreaming.serviceUrlWithOutAd);
     res.json(resposne);
   } catch (error) {
-    console.log('[Streaming Router /getStreaming] error = ', error);
+    console.log('[Streaming Router /getMyStreamingPage] error = ', error);
     res.status(500).json({ error: 'Server Internal Error' });
   }
 });
@@ -190,26 +190,6 @@ router.get('/updateStreamingTitleAndCategory', async (req, res) => {
   }
 });
 
-// router.get('/updateStreamingCategory', async (req, res) => {
-//   try {
-//     const sessionId = req.cookies.NSESSIONID;
-//     const streamingCategory =  req.query.streamingCategory;
-//     const result = await streamingService.updateStreamingCategory(sessionId, streamingCategory);
-
-//     let response;
-//     if(result == 'success') {
-//       response = new Data('success', '');
-//     } else {
-//       response = new Data('fail','');
-//     }
-    
-//     res.json(response);
-//   } catch (error) {
-//     console.log('[StreamingRouter /updateStreamingCategory] error = ', error);
-//     res.status(500).json({ error: 'Server Internal Error' });
-//   }
-// });
-
 router.get('/finishStreaming', async (req, res) => {
   try {
     const sessionId = req.cookies.NSESSIONID;
@@ -262,6 +242,24 @@ router.get('/getAdminStreamingList', async (req, res) => {
   } catch (error) {
     console.log('[StreamingRouter /getAdminStreamingList] error = ', error);
     res.status(500).json({ error: 'Server Internal Error' });
+  }
+});
+
+router.get('/getStreaming', async (req, res) => {
+  try {
+    const userId =  req.query.userId;
+    const result = await streamingService.getStreaming(userId);
+
+    let resposne;
+    if(result == 'fail') {
+      resposne = new Data('fail', '');
+    }else {
+      resposne = new Data('success', result);
+    }
+
+    res.json(resposne);
+  } catch (error) {
+    console.log('[StreamingRouter /getStreaming] error = ', error);
   }
 });
 

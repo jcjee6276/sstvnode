@@ -81,12 +81,14 @@ class StreamingDAO {
     }
   }
 
-  async getStreaming(streamingNo) {
+  //streamingNo대신 userId로 가져오게하기
+  async getStreaming(userId) {
     try {
+      console.log('[StreamingDAO getStreaming] userId = ', userId);
       connection.connect();
 
-      const sql = 'SELECT * FROM STREAMING WHERE STREAMING_NO = ?';
-      const param = [streamingNo];
+      const sql = 'SELECT * FROM STREAMING WHERE USER_ID = ?';
+      const param = [userId];
 
       const result = await new Promise((resolve, reject) => {
         connection.query(sql, param, (error, results) => {
@@ -99,9 +101,11 @@ class StreamingDAO {
         });  
       });
 
-      let response;
+      let response = [];
       if(result.length > 0) {
-        response = {...result[0]};
+        for(const data of result) {
+          response.push({...data});
+        }
       }
 
       return response;

@@ -37,6 +37,15 @@ class DonationService {
           await userDAO.updateUserCoin(updateCoin, userId);
           await userDAO.addUserCoinHistory(userId, donationAmount, 0);
 
+          let streaming = await Redis.client.get(streamerId + '_onStreaming');
+          if(streaming) {
+            streaming = JSON.parse(streaming);
+            
+            const totalDonationAmount = Number(streaming.totalDonationAmount) + Number(donationAmount);
+            streaming.totalDonationAmount = totalDonationAmount;
+            
+            await Redis.client.set(streamerId + '_onStreaming', JSON.stringify(streaming));
+          }
         }, 2000);
 
         
