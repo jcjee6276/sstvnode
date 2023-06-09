@@ -87,10 +87,10 @@ const socketEventHandler = (io) => {
       }
     });
 
-    socket.on('send_donation', async({data}) => {
+    socket.on('send_donation', async(data) => {
       try {
-        const userId = data?.userId;
-        const streamerId = data?.streamingUserId;
+        const userId = data?.USER_ID;
+        const streamerId = data?.STREAMING_USER_ID;
         const donationContent = data?.DONATION_CONTENT;
         const donationAmount = data?.DONATION_AMOUNT;
 

@@ -27,7 +27,8 @@ router.post('/addDonation', async (req, res) => {
       const data = {
         USER_ID : req.body.userId,
         DONATION_AMOUNT : req.body.donationAmount,
-        DONATION_CONTENT : req.body.donationContent
+        DONATION_CONTENT : req.body.donationContent,
+        STREAMING_USER_ID : req.body.streamingUserId
       }
       
       response = new Data('success', data);
