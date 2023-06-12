@@ -38,7 +38,7 @@ const app = express();
 
 app.use(logger('dev'));
 app.use(cors({
-  origin: ['http://223.130.138.22:3000', 'http://223.130.138.22', 'http://sstvv.xyz', 'http://localhost:3000'], 
+  origin: ['http://175.45.201.36:3000', 'http://175.45.201.36', 'http://sstvv.xyz', 'http://localhost:3000'], 
   credentials: true // withCredentials 활성화
 }));
 
