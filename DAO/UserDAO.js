@@ -33,8 +33,8 @@ class UserDAO {
     try {
       connection.connect();
 
-      const sql = 'INSERT INTO COIN_HISTORY (USER_ID, PRICE, PROD_NAME) VALUES(?, ?, ?) ';
-      const param = [userId, price, prodName];
+      const sql = 'INSERT INTO COIN_HISTORY (USER_ID, PRICE, PROD_NAME, PAY_DATE) VALUES(?, ?, ?, ?) ';
+      const param = [userId, price, prodName, moment().format('YYYY-MM-DD/HH:mm')];
 
       const response = await new Promise((resolve, reject) => {
         connection.query(sql, param, (error, result) => {
