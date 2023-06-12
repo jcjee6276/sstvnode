@@ -38,7 +38,7 @@ const app = express();
 
 app.use(logger('dev'));
 app.use(cors({
-  origin: 'http://localhost:3000', // 클라이언트의 도메인
+  origin: ['http://223.130.138.22:3000', 'http://223.130.138.22', 'http://sstvv.xyz', 'http://localhost:3000'], 
   credentials: true // withCredentials 활성화
 }));
 

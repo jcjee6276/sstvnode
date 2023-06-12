@@ -14,7 +14,7 @@ router.post('/addAdReq', upload.single('file'), (req, res) => {
   try {
     const sessionId = req.cookies.NSESSIONID;
     const ext = path.extname(req.file.originalname);
-
+    
     const uuid = v4();
     const file = req.file;
     const fileName = uuid + ext;
@@ -58,8 +58,13 @@ router.get('/getAdReqList', async (req, res) => {
   try {
     const searchKeyword = req.query.searchKeyword;
     const processCode = req.query.processCode;
-
+    
     const list = await adService.getAdReqList(searchKeyword, processCode);
+
+    console.log('[AdRouter /getAdReqList] searckKeyword', searchKeyword);
+    console.log('[AdRouter /getAdReqList] processCode', processCode);
+    console.log('[AdRouter /getAdReqList] list', list);
+
     res.json(new Data('success', list));
   } catch (error) {
     console.log('[AdRouter /getAdReqList] error = ', error);

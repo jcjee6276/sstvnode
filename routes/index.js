@@ -16,10 +16,14 @@ router.post('/testLogin', async (req, res, next) => {
         const sessionId = v4();
 
         await Redis.client.set(sessionId + '_user', JSON.stringify(user));
-        res.cookie('NSESSIONID', sessionId, 
-        { 
-          httpOnly: false, maxAge: 7 * 24 * 60 * 60 * 1000 
-        });
+        // res.cookie('NSESSIONID', sessionId, 
+        // { 
+        //   httpOnly: false, maxAge: 7 * 24 * 60 * 60 * 1000 ,
+        //   // sameSite: 'None'
+        // });
+        // res.setHeader('Set-Cookie', `NSESSIONID=${sessionId}; Max-Age=${7 * 24 * 60 * 60 * 1000}; SameSite=None`);
+        res.setHeader('Set-Cookie', `NSESSIONID=${sessionId}; Max-Age=${7 * 24 * 60 * 60 * 1000}; SameSite=None; Domain=localhost; Secure=false`);
+
         res.json(new Data('success', 'test'));
         return;
       }

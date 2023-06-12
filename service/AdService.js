@@ -16,6 +16,8 @@ class AdService {
     try {
       if(this.isLogin(sessionId) && this.validateCoin(sessionId)) {
         const user = await Redis.client.get(sessionId + '_user');
+        console.log('[AdService addAdReq] sessionId = ', sessionId);
+        console.log('[AdService addAdReq] user = ', user);
 
         if(user) {
           const userId = JSON.parse(user).userId;

@@ -20,15 +20,21 @@ class AdDAO {
         AD_STREAMING_PLAYS_COUNT : 0
       };
   
-      await connection.query(sql, param, (error, result) => {
-        if(error) {
-          console.log('[AdDAO addAdReq] error = ', error);
-        }
-      });
+      const response = await new Promise((resolve, reject) => {
+        connection.query(sql, param, (error, result) => {
+          if(error) {
+            resolve('fail');
+          }else {
+            resolve('success');
+          }
+        });
+      }).then((response) => {
+        connection.end();
+      })
     } catch (error) {
       console.log('[AdDAO addAdReq] error = ', error);  
     } finally {
-      connection.end();
+      
     }
   }
 
@@ -137,9 +143,9 @@ class AdDAO {
     try {
       connection.connect();
 
-
       let sql = 'SELECT AD_REQ_NO, USER_ID, AD_NAME,' 
-                + ' DATE_FORMAT(AD_REQ_DATE, "%Y-%m-%d / %H:%i") AS AD_REQ_DATE, PROCESS_CODE, PAYMENT_COIN'
+                + ' DATE_FORMAT(AD_REQ_DATE, "%Y-%m-%d / %H:%i") AS AD_REQ_DATE, PROCESS_CODE,'
+                + ' PAYMENT_COIN, DENY_CODE, AD_PLAYS_COUNT, AD_TOTAL_VIEWERS, AD_STREAMING_PLAYS_COUNT'
                 + ' FROM AD_REQ ';
       const param = [];
       let response = [];
