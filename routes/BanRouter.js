@@ -101,7 +101,7 @@ router.post('/addStreamingBan', async (req, res) => {
       const result = await banService.addStreamingBan(ban);
 
       if(result == 'fail') {
-      response = new Data('fail', '1');
+        response = new Data('fail', '1');
       }else {
         response = new Data('success', '');
       }
