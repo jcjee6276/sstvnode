@@ -17,11 +17,12 @@ router.post('/testLogin', async (req, res, next) => {
         const sessionId = v4();
 
         await Redis.client.set(sessionId + '_user', JSON.stringify(user));
-        res.cookie('NSESSIONID', sessionId, 
-        { 
-          httpOnly: false, maxAge: 7 * 24 * 60 * 60 * 1000 ,
-          // sameSite: 'None'
-        });
+        // res.cookie('NSESSIONID', sessionId, 
+        // { 
+        //   httpOnly: false, maxAge: 7 * 24 * 60 * 60 * 1000 ,
+        //   // sameSite: 'None'
+        // });
+        res.setHeader('Set-Cookie', [`NSESSIONID=${sessionId}; HttpOnly=false; Max-Age=${7 * 24 * 60 * 60 * 1000}; Domain=ssstvv.com`]);
 
         res.json(new Data('success', ''));
         return;
