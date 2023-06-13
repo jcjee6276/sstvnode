@@ -29,7 +29,7 @@ var server = http.createServer(app);
 
 io = new Server(server, {
   cors: {
-    origin: "http://175.45.201.36:3000",
+    origin: ['http://175.45.201.36:3000', 'http://175.45.201.36'],
     methods: ["GET", "POST"],
   },
 });
