@@ -11,20 +11,19 @@ router.post('/testLogin', async (req, res, next) => {
 
     if(user){
       const sessionId = req.cookies.NSESSIONID;
-
+      console.log('[index.js /testLogin] sessionId = ', sessionId);
+      
       if(sessionId == null || sessionId == undefined) {
         const sessionId = v4();
 
         await Redis.client.set(sessionId + '_user', JSON.stringify(user));
-        // res.cookie('NSESSIONID', sessionId, 
-        // { 
-        //   httpOnly: false, maxAge: 7 * 24 * 60 * 60 * 1000 ,
-        //   // sameSite: 'None'
-        // });
-        // res.setHeader('Set-Cookie', `NSESSIONID=${sessionId}; Max-Age=${7 * 24 * 60 * 60 * 1000}; SameSite=None`);
-        res.setHeader('Set-Cookie', `NSESSIONID=${sessionId}; Max-Age=${7 * 24 * 60 * 60 * 1000}; SameSite=None; Domain=localhost; Secure=false`);
+        res.cookie('NSESSIONID', sessionId, 
+        { 
+          httpOnly: false, maxAge: 7 * 24 * 60 * 60 * 1000 ,
+          // sameSite: 'None'
+        });
 
-        res.json(new Data('success', 'test'));
+        res.json(new Data('success', ''));
         return;
       }
     }
