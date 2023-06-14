@@ -357,7 +357,6 @@ class StreamingService {
     }
   }
 
-  //관리자인지 스트리머회원인지는 라우터에서 판단하기
   async finishStreaming(sessionId, streamingUserId) {
     try {
       const isStreamingOwner = this.isStreamingOwner(sessionId, streamingUserId);

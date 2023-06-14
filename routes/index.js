@@ -22,7 +22,8 @@ router.post('/testLogin', async (req, res, next) => {
         //   httpOnly: false, maxAge: 7 * 24 * 60 * 60 * 1000 ,
         //   // sameSite: 'None'
         // });
-        res.setHeader('Set-Cookie', [`NSESSIONID=${sessionId}; HttpOnly=false; Max-Age=${7 * 24 * 60 * 60 * 1000}; Domain=ssstvv.com`]);
+        // res.setHeader('Set-Cookie', [`NSESSIONID=${sessionId}; HttpOnly=false; Max-Age=${7 * 24 * 60 * 60 * 1000}; Domain=ssstvv.com`]);
+        res.setHeader('Set-Cookie', [`NSESSIONID=${sessionId}; HttpOnly=false; Max-Age=${7 * 24 * 60 * 60 * 1000};`]);
 
         res.json(new Data('success', ''));
         return;
@@ -35,10 +36,20 @@ router.post('/testLogin', async (req, res, next) => {
 });
 
 router.get('/testLogout', (req, res) => {
-  const sessionId = req.cookies.NSESSIONID;
-  console.log('[index.js /testLogout] sessionId = ', sessionId);
-  Redis.client.del(sessionId + '_user');
-  res.json(new Data('success', ''));
+  try {
+    const sessionId = req.cookies.NSESSIONID;
+    console.log('[index.js /testLogout] sessionId = ', sessionId);
+
+    if(sessionId) {
+      Redis.client.del(sessionId + '_user');
+      res.clearCookie('NSESSIONID', { path: '/' });
+    }
+    
+    res.json(new Data('success', ''));
+  } catch (error) {
+    console.log('[index.js /testLogout] error = ', error);
+    res.status(500).json({ error: 'Server Internal Error' });
+  }
 });
 
 //테스트를 위해 임시로 로그인 시키기

@@ -29,8 +29,12 @@ var server = http.createServer(app);
 
 io = new Server(server, {
   cors: {
+<<<<<<< HEAD
     // origin: ['http://175.45.201.36:3000', 'http://175.45.201.36', 'http://www.ssstvv.com'],
     origin: 'localhost:3000',
+=======
+    origin: ['http://175.45.201.36:3000', 'http://175.45.201.36', 'http://www.ssstvv.com', 'http://localhost:3000'],
+>>>>>>> origin/main
     methods: ["GET", "POST"],
   },
 });
