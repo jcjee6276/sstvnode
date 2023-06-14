@@ -285,4 +285,23 @@ router.get('/getStreamingByStreamingNo', async (req, res) => {
   }
 });
 
+router.get('/getOnGoingStreamingByUserId', async (req, res) => {
+  try {
+    const userId = req.query.userId;
+    const result = await streamingService.getOnGoingStreamingByUserId(userId);
+
+    console.log('[StreamingRouter /getOnGoingStreamingByUserId] userId = ', userId);
+    
+    let response
+    if(result == 'fail') {
+      response = new Data('fail', '');
+    }
+    response = new Data('success', result);
+    res.json(response);
+  } catch (error) {
+    console.log('[StreamingRouter /getOnGoingStreamingByUserId] error = ', error);
+    res.status(500).json({ error: 'Server Internal Error' });
+  }
+});
+
 module.exports = router;

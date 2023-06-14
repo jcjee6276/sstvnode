@@ -170,15 +170,15 @@ class StreamingService {
 
   async getStreamingViewerPage(sessionId, streamingUserId) {
     try {
-      const isLogin = await this.isLogin(sessionId);
+      // const isLogin = await this.isLogin(sessionId);
       const isBlackList = await this.isBlackList(sessionId, streamingUserId);
       const isHavingTicket = await this.isHavingTicket(sessionId);
   
-      console.log('[StreamingService getStreamingViewerPage] isLogin = ', isLogin);
+      // console.log('[StreamingService getStreamingViewerPage] isLogin = ', isLogin);
       console.log('[StreamingService getStreamingViewerPage] isBlackList = ', isBlackList);
       console.log('[StreamingService getStreamingViewerPage] isHavingTicket = ', isHavingTicket);
 
-      if(isLogin && isBlackList) {
+      if(isBlackList) {
         const streaming = JSON.parse(await Redis.client.get(streamingUserId + '_onStreaming'));
         
         let response;
@@ -196,9 +196,9 @@ class StreamingService {
   
         return response;
       }else {
-        if(isLogin == false) {
-          return 1;
-        }
+        // if(isLogin == false) {
+        //   return 1;
+        // }
   
         if(isBlackList == false) {
           return 2;
@@ -359,8 +359,11 @@ class StreamingService {
 
   async finishStreaming(sessionId, streamingUserId) {
     try {
-      const isStreamingOwner = this.isStreamingOwner(sessionId, streamingUserId);
+      const isStreamingOwner = await this.isStreamingOwner(sessionId, streamingUserId);
       let streaming = await Redis.client.get(streamingUserId + '_onStreaming');
+
+      console.log('[StreamingService finishStreaming] isStreamingOwner = ', isStreamingOwner);
+      console.log('[StreamingService finishStreaming] streaming = ', streaming);
   
       if(streaming && isStreamingOwner) {
         streaming = JSON.parse(streaming);
@@ -391,6 +394,7 @@ class StreamingService {
   async finishRecord(streaming) {
     try {
       const result = await streamingRestDAO.finishRecord(streaming.channelIdWithOutAd);
+      console.log('[StreamingService finishRecord] result = ' + result);
 
       if(result.content) {
         const recordList = result.content.recordList;
@@ -669,6 +673,23 @@ class StreamingService {
     } catch (error) {
       console.log('[StreamingService /getStreaming] error = ' + error);
     }
+  }
+
+  async getOnGoingStreamingByUserId(userId) {
+    try {
+      let streaming = await Redis.client.get(userId + '_onStreaming');
+
+      if(streaming) {
+        streaming = JSON.parse(streaming);
+        return streaming;
+      }
+
+      return 'fail';
+    } catch (error) {
+      console.log('[StreamingService getOnGoingStreamingByUserId] userId = ', userId);
+      return('fail');
+    }
+
   }
 }
 

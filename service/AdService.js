@@ -65,6 +65,7 @@ class AdService {
 
   async playAd() {
     try {
+      await this.removeAllLiveCurtain();
       const adList = await adDAO.getAdList();
       const fileName = await adList[0].AD_NAME;
       const curtainId =  await adRestDAO.createLiveCurtain(fileName);
@@ -83,16 +84,16 @@ class AdService {
         });
       }
       
-      const keys = await Redis.client.keys('*_onStreaming');
+      const keys = await Redis.client.keys('user1_onStreaming');
 
       let adPlaysCount = adList[0].AD_PLAYS_COUNT;
       let adStreamingPlaysCount = adList[0].AD_STREAMING_PLAYS_COUNT;
       let adTotalViewers = adList[0].AD_TOTAL_VIEWERS;
       
-      for(const key of keys) {
+      // for(const key of keys) {
         status = await adRestDAO.getCurtainStatus(curtainId);
 
-        const stremaing = JSON.parse(await Redis.client.get(key));
+        const stremaing = JSON.parse(await Redis.client.get(keys[0]));
         const channelId = stremaing.channelIdWithAd;
         const streamingViewer = stremaing.streamingViewer;
     
@@ -104,10 +105,9 @@ class AdService {
         console.log('[AdService playAd] status = ', status);
         console.log('[AdService startLiveCurtain()]');
         adRestDAO.startLiveCurtain(channelId, curtainId);
-        // await this.delay(180000);
-
+        // await this.delay(500000);
         // console.log('[next Streaming]');
-      }
+      // }
       
       adPlaysCount++;
       await adDAO.updateAdPlaysCount(adList[0].AD_REQ_NO, adPlaysCount);
@@ -179,12 +179,14 @@ class AdService {
           await this.removeLiveCurtain(curtain.id);
         }
 
-        resolve();
+        resolve('[success remove liveCurtain]');
       } catch (error) {
         console.log('[AdService removeAllLiveCurtain] error = ', error);
         reject(error);
       }  
     });
+
+    console.log('[AdService removeAllLiveCurtain] result = ', result);
   }
 
   //로그인되어있으면 true, 안되어있으면 false

@@ -8,6 +8,7 @@ const adService = new (require('../service/AdService'))();
 const adRestDAO = new (require('../DAO/AdRestDAO'))();
 const Data = require('../model/Data');
 const AdDAO = require('../DAO/AdDAO');
+let interval;
 
 
 router.post('/addAdReq', upload.single('file'), (req, res) => {
@@ -113,7 +114,15 @@ router.get('/getAdList', async (req, res) => {
 router.get('/updateAdCycle', async (req, res) => {
   try {
     const adCycle = req.query.adCycle;
-    global.adCycle = 1000 * 60 * Number(adCycle);
+    // global.adCycle = 1000 * 60 * Number(adCycle);
+
+    if(interval) {
+      clearInterval(interval);
+    }
+
+    interval = setTimeout(() => {
+      adService.playAd();
+    }, 1000 * 60 * adCycle);
 
     const response = new Data('success', '');
     res.json(response);
