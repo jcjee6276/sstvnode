@@ -60,6 +60,7 @@ class StreamingDAO {
       ]
 
       console.log('[timeDiff] = ', timeDiff);
+      console.log(param);
       const userSQL =  ` UPDATE USER SET ACCUMULATED_VIEWERS = ACCUMULATED_VIEWERS + ${streaming.totalStreamingViewer},`
                       + ` TOTAL_STREAMING_ACCUMULATED_TIME = TOTAL_STREAMING_ACCUMULATED_TIME + ${timeDiff} ;`
 
