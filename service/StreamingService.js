@@ -170,11 +170,11 @@ class StreamingService {
 
   async getStreamingViewerPage(sessionId, streamingUserId) {
     try {
-      // const isLogin = await this.isLogin(sessionId);
+      const isLogin = await this.isLogin(sessionId);
       const isBlackList = await this.isBlackList(sessionId, streamingUserId);
       const isHavingTicket = await this.isHavingTicket(sessionId);
   
-      // console.log('[StreamingService getStreamingViewerPage] isLogin = ', isLogin);
+      console.log('[StreamingService getStreamingViewerPage] isLogin = ', isLogin);
       console.log('[StreamingService getStreamingViewerPage] isBlackList = ', isBlackList);
       console.log('[StreamingService getStreamingViewerPage] isHavingTicket = ', isHavingTicket);
 
@@ -196,9 +196,9 @@ class StreamingService {
   
         return response;
       }else {
-        // if(isLogin == false) {
-        //   return 1;
-        // }
+        if(isLogin == false) {
+          return 1;
+        }
   
         if(isBlackList == false) {
           return 2;
