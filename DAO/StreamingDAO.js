@@ -86,7 +86,7 @@ class StreamingDAO {
     try {
       connection.connect();
 
-      const sql = 'SELECT * FROM STREAMING WHERE USER_ID = ?';
+      const sql = 'SELECT * FROM STREAMING WHERE USER_ID = ? ORDER BY STREAMING_START_TIME DESC';
       const param = [userId];
 
       const result = await new Promise((resolve, reject) => {
